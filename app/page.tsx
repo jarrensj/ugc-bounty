@@ -1,28 +1,105 @@
 "use client";
 
-import { bounties } from "./data/bounties";
+import { bounties as initialBounties, Bounty } from "./data/bounties";
 import { useState } from "react";
+import Link from "next/link";
 import BountyCard from "./components/BountyCard";
 
 export default function Home() {
+  const [bounties, setBounties] = useState<Bounty[]>(initialBounties);
   const [selectedBounty, setSelectedBounty] = useState<number | null>(null);
-  const [platform, setPlatform] = useState("tiktok");
   const [url, setUrl] = useState("");
+  const [isValidating, setIsValidating] = useState(false);
+  const [validationResult, setValidationResult] = useState<{valid: boolean; explanation: string} | null>(null);
+  const [urlError, setUrlError] = useState<string | null>(null);
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  
+  // Create bounty form state
+  const [bountyName, setBountyName] = useState("");
+  const [bountyDescription, setBountyDescription] = useState("");
+  const [totalBounty, setTotalBounty] = useState("");
+  const [ratePer1k, setRatePer1k] = useState("");
+
+  const isValidSupportedUrl = (url: string): boolean => {
+    try {
+      const urlObj = new URL(url);
+      const hostname = urlObj.hostname.toLowerCase();
+      return hostname.includes('youtube.com') || 
+             hostname.includes('youtu.be') || 
+             hostname.includes('instagram.com') || 
+             hostname.includes('tiktok.com');
+    } catch {
+      return false;
+    }
+  };
+
+  const getPlatformFromUrl = (url: string): string => {
+    try {
+      const urlObj = new URL(url);
+      const hostname = urlObj.hostname.toLowerCase();
+      if (hostname.includes('youtube.com') || hostname.includes('youtu.be')) return 'youtube';
+      if (hostname.includes('instagram.com')) return 'instagram';
+      if (hostname.includes('tiktok.com')) return 'tiktok';
+      return 'unknown';
+    } catch {
+      return 'unknown';
+    }
+  };
+
+  const handleUrlChange = (newUrl: string) => {
+    setUrl(newUrl);
+    setUrlError(null);
+    
+    if (newUrl && !isValidSupportedUrl(newUrl)) {
+      setUrlError('URL must be from YouTube, Instagram, or TikTok');
+    }
+  };
 
   const handleClaimBounty = (bountyId: number) => {
     setSelectedBounty(bountyId);
     setUrl("");
-    setPlatform("tiktok");
+    setValidationResult(null);
+    setIsValidating(false);
+    setUrlError(null);
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     const bounty = bounties.find((b) => b.id === selectedBounty);
-    if (bounty && url) {
-      alert(
-        `Submitted!\nBounty: ${bounty.name}\nPlatform: ${platform}\nURL: ${url}`
-      );
-      setSelectedBounty(null);
-      setUrl("");
+    if (bounty && url && isValidSupportedUrl(url)) {
+      const platform = getPlatformFromUrl(url);
+      
+      if (platform === "youtube") {
+        setIsValidating(true);
+        setValidationResult(null);
+        
+        try {
+          const response = await fetch('/api/validate-bounty', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              url: url,
+              requirements: bounty.description
+            }),
+          });
+
+          const result = await response.json();
+          setValidationResult(result);
+        } catch (error) {
+          setValidationResult({
+            valid: false,
+            explanation: 'Failed to validate video. Please try again.'
+          });
+        } finally {
+          setIsValidating(false);
+        }
+      } else {
+        // For Instagram and TikTok, show success message directly
+        alert(`Submitted!\nBounty: ${bounty.name}\nPlatform: ${platform}\nURL: ${url}`);
+        setSelectedBounty(null);
+        setUrl("");
+      }
     }
   };
 
@@ -40,6 +117,29 @@ export default function Home() {
     }
   };
 
+  const handleCreateBounty = () => {
+    if (bountyName && bountyDescription && totalBounty && ratePer1k) {
+      // TODO: Save to Supabase
+      const newBounty: Bounty = {
+        id: Math.max(...bounties.map(b => b.id)) + 1,
+        name: bountyName,
+        description: bountyDescription,
+        totalBounty: parseFloat(totalBounty),
+        ratePer1kViews: parseFloat(ratePer1k),
+        claimedBounty: 0,
+      };
+      
+      setBounties([newBounty, ...bounties]);
+      
+      // Reset form
+      setBountyName("");
+      setBountyDescription("");
+      setTotalBounty("");
+      setRatePer1k("");
+      setShowCreateModal(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-[#F5F1E8]">
       {/* Header */}
@@ -54,8 +154,11 @@ export default function Home() {
                 Browse available bounties and start earning today
               </p>
             </div>
-            <button className="bg-black text-white font-semibold px-12 hover:bg-gray-800 transition-colors duration-200">
-              Sign In
+            <button
+              onClick={() => setShowCreateModal(true)}
+              className="bg-black text-white font-semibold px-12 hover:bg-gray-800 transition-colors duration-200"
+            >
+              Create Bounty
             </button>
           </div>
         </div>
@@ -69,7 +172,16 @@ export default function Home() {
               key={bounty.id}
               className="relative md:[&:not(:nth-child(2n+1))]:ml-[-1px] lg:[&:not(:nth-child(3n+1))]:ml-[-1px] [&:not(:first-child)]:md:[&:nth-child(2n+1)]:mt-[-1px] [&:not(:first-child)]:lg:[&:nth-child(3n+1)]:mt-[-1px] md:[&:nth-child(n+3)]:mt-[-1px] lg:[&:nth-child(n+4)]:mt-[-1px] [&:not(:first-child)]:mt-[-1px] first:mt-[-1px] md:[&:nth-child(2)]:mt-[-1px] lg:[&:nth-child(3)]:mt-[-1px] hover:z-10"
             >
-              <BountyCard bounty={bounty} onClaim={handleClaimBounty} />
+              <Link href={`/bounty/${bounty.id}`} className="block">
+                <BountyCard
+                  bounty={bounty}
+                  onClaim={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    handleClaimBounty(bounty.id);
+                  }}
+                />
+              </Link>
             </div>
           ))}
         </div>
@@ -99,53 +211,207 @@ export default function Home() {
             </div>
 
             <div className="space-y-4">
-              {/* Platform Dropdown */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Platform
-                </label>
-                <select
-                  value={platform}
-                  onChange={(e) => setPlatform(e.target.value)}
-                  className="w-full px-4 py-2 border border-black bg-white text-black focus:outline-none focus:border-black"
-                >
-                  <option value="tiktok">TikTok</option>
-                  <option value="twitter">Twitter</option>
-                  <option value="instagram">Instagram</option>
-                  <option value="youtube">YouTube</option>
-                  <option value="facebook">Facebook</option>
-                </select>
-              </div>
-
               {/* URL Input */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Content URL
+                  Content URL (YouTube, Instagram, or TikTok)
                 </label>
                 <input
                   type="url"
                   value={url}
-                  onChange={(e) => setUrl(e.target.value)}
-                  placeholder="https://..."
-                  className="w-full px-4 py-2 border border-black bg-white text-black placeholder-gray-400 focus:outline-none focus:border-black"
+                  onChange={(e) => handleUrlChange(e.target.value)}
+                  placeholder="https://youtube.com/watch?v=... or https://instagram.com/... or https://tiktok.com/..."
+                  className={`w-full px-4 py-2 rounded-lg border ${
+                    urlError
+                      ? 'border-red-300 dark:border-red-700 focus:ring-2 focus:ring-red-500'
+                      : 'border-slate-300 dark:border-slate-700 focus:ring-2 focus:ring-blue-500'
+                  } focus:border-transparent bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 placeholder-slate-400`}
+                />
+                {urlError && (
+                  <p className="mt-2 text-sm text-red-600 dark:text-red-400">{urlError}</p>
+                )}
+                {url && !urlError && isValidSupportedUrl(url) && (
+                  <p className="mt-2 text-sm text-emerald-600 dark:text-emerald-400">
+                    ✓ {getPlatformFromUrl(url).charAt(0).toUpperCase() + getPlatformFromUrl(url).slice(1)} URL detected
+                  </p>
+                )}
+              </div>
+
+              {/* Validation Result */}
+              {isValidating && (
+                <div className="bg-blue-50 dark:bg-blue-950 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+                  <div className="flex items-center space-x-3">
+                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-600"></div>
+                    <p className="text-blue-800 dark:text-blue-200 font-medium">
+                      Validating your video meets the bounty requirements...
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {validationResult && (
+                <div className={`border rounded-lg p-4 ${
+                  validationResult.valid
+                    ? 'bg-emerald-50 dark:bg-emerald-950 border-emerald-200 dark:border-emerald-800'
+                    : 'bg-red-50 dark:bg-red-950 border-red-200 dark:border-red-800'
+                }`}>
+                  <div className="flex items-start space-x-3">
+                    <div className={`flex-shrink-0 w-6 h-6 rounded-full flex items-center justify-center ${
+                      validationResult.valid ? 'bg-emerald-100 dark:bg-emerald-900' : 'bg-red-100 dark:bg-red-900'
+                    }`}>
+                      {validationResult.valid ? (
+                        <svg className="w-4 h-4 text-emerald-600 dark:text-emerald-400" fill="currentColor" viewBox="0 0 20 20">
+                          <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                        </svg>
+                      ) : (
+                        <svg className="w-4 h-4 text-red-600 dark:text-red-400" fill="currentColor" viewBox="0 0 20 20">
+                          <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+                        </svg>
+                      )}
+                    </div>
+                    <div>
+                      <p className={`font-medium ${
+                        validationResult.valid
+                          ? 'text-emerald-800 dark:text-emerald-200'
+                          : 'text-red-800 dark:text-red-200'
+                      }`}>
+                        {validationResult.valid
+                          ? '🎉 Your video is now part of the bounty!'
+                          : '❌ Video does not meet requirements'
+                        }
+                      </p>
+                      <p className={`text-sm mt-1 ${
+                        validationResult.valid
+                          ? 'text-emerald-700 dark:text-emerald-300'
+                          : 'text-red-700 dark:text-red-300'
+                      }`}>
+                        {validationResult.explanation}
+                      </p>
+                      {validationResult.valid && (
+                        <button
+                          onClick={() => {
+                            setSelectedBounty(null);
+                            setUrl("");
+                            setValidationResult(null);
+                          }}
+                          className="mt-3 bg-emerald-600 dark:bg-emerald-500 text-white font-semibold py-2 px-4 rounded-lg hover:bg-emerald-700 dark:hover:bg-emerald-600 transition-colors duration-200"
+                        >
+                          Close
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Buttons */}
+              {!validationResult && (
+                <div className="flex gap-3 pt-2">
+                  <button
+                    onClick={handleCalculate}
+                    disabled={!url || isValidating}
+                    className="flex-1 bg-blue-600 dark:bg-blue-500 text-white font-semibold py-3 px-6 rounded-lg hover:bg-blue-700 dark:hover:bg-blue-600 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    Calculate
+                  </button>
+                  <button
+                    onClick={handleSubmit}
+                    disabled={!url || isValidating || !isValidSupportedUrl(url)}
+                    className="flex-1 bg-emerald-600 dark:bg-emerald-500 text-white font-semibold py-3 px-6 rounded-lg hover:bg-emerald-700 dark:hover:bg-emerald-600 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {isValidating ? 'Validating...' : 'Submit'}
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Create Bounty Modal */}
+      {showCreateModal && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+          <div className="bg-white dark:bg-slate-900 rounded-xl shadow-2xl max-w-lg w-full p-6 border border-slate-200 dark:border-slate-800">
+            <div className="flex justify-between items-start mb-6">
+              <h2 className="text-2xl font-bold text-slate-900 dark:text-slate-100">
+                Create New Bounty
+              </h2>
+              <button
+                onClick={() => setShowCreateModal(false)}
+                className="text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 text-2xl"
+              >
+                ×
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              {/* Bounty Name */}
+              <div>
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                  Bounty Name
+                </label>
+                <input
+                  type="text"
+                  value={bountyName}
+                  onChange={(e) => setBountyName(e.target.value)}
+                  placeholder="e.g., Sushi Hat Challenge"
+                  className="w-full px-4 py-2 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 />
               </div>
 
-              {/* Buttons */}
-              <div className="flex gap-3 pt-2">
+              {/* Description */}
+              <div>
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                  Description
+                </label>
+                <textarea
+                  value={bountyDescription}
+                  onChange={(e) => setBountyDescription(e.target.value)}
+                  placeholder="Describe what creators should do..."
+                  rows={3}
+                  className="w-full px-4 py-2 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+                />
+              </div>
+
+              {/* Total Bounty */}
+              <div>
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                  Total Bounty ($)
+                </label>
+                <input
+                  type="number"
+                  value={totalBounty}
+                  onChange={(e) => setTotalBounty(e.target.value)}
+                  placeholder="5000"
+                  min="0"
+                  className="w-full px-4 py-2 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
+              </div>
+
+              {/* Rate per 1k Views */}
+              <div>
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                  Rate per 1k Views ($)
+                </label>
+                <input
+                  type="number"
+                  value={ratePer1k}
+                  onChange={(e) => setRatePer1k(e.target.value)}
+                  placeholder="8"
+                  min="0"
+                  step="0.01"
+                  className="w-full px-4 py-2 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
+              </div>
+
+              {/* Submit Button */}
+              <div className="pt-2">
                 <button
-                  onClick={handleCalculate}
-                  disabled={!url}
-                  className="flex-1 bg-black text-white font-semibold py-3 px-6 hover:bg-gray-800 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                  onClick={handleCreateBounty}
+                  disabled={!bountyName || !bountyDescription || !totalBounty || !ratePer1k}
+                  className="w-full bg-blue-600 dark:bg-blue-500 text-white font-semibold py-3 px-6 rounded-lg hover:bg-blue-700 dark:hover:bg-blue-600 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  Calculate
-                </button>
-                <button
-                  onClick={handleSubmit}
-                  disabled={!url}
-                  className="flex-1 bg-black text-white font-semibold py-3 px-6 hover:bg-gray-800 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  Submit
+                  Create Bounty
                 </button>
               </div>
             </div>
