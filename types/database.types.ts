@@ -9,6 +9,7 @@ export interface Database {
           rate_per_1k_views: number;
           description: string;
           claimed_bounty: number;
+          creator_id: string | null;
           created_at: string;
           updated_at: string;
         };
@@ -19,6 +20,7 @@ export interface Database {
           rate_per_1k_views: number;
           description: string;
           claimed_bounty?: number;
+          creator_id?: string | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -29,6 +31,7 @@ export interface Database {
           rate_per_1k_views?: number;
           description?: string;
           claimed_bounty?: number;
+          creator_id?: string | null;
           created_at?: string;
           updated_at?: string;
         };

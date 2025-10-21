@@ -3,34 +3,29 @@ import { Bounty } from "../data/bounties";
 interface BountyCardProps {
   bounty: Bounty;
   onClaim: (e: React.MouseEvent) => void;
+  isOwner?: boolean;
 }
 
-export default function BountyCard({ bounty, onClaim }: BountyCardProps) {
+export default function BountyCard({ bounty, onClaim, isOwner = false }: BountyCardProps) {
   const progressPercentage = (bounty.claimedBounty / bounty.totalBounty) * 100;
   const remainingBounty = bounty.totalBounty - bounty.claimedBounty;
 
   return (
-    <div className="group transition-all duration-300 overflow-hidden border border-gray-300 hover:border-black flex flex-col h-full">
+    <div className="group transition-all duration-300 overflow-hidden border border-gray-300 hover:border-black flex flex-col h-[400px]">
       <div className="p-6 flex flex-col flex-grow">
         {/* Bounty Name */}
-        <h2 className="text-2xl font-bold text-black mb-3">
-          {bounty.name}
-        </h2>
+        <h2 className="text-2xl font-bold text-black mb-3">{bounty.name}</h2>
 
         {/* Total Bounty and Rate */}
         <div className="flex items-center justify-between mb-4">
           <div className="flex flex-col">
-            <span className="text-sm text-black">
-              Total Bounty
-            </span>
+            <span className="text-sm text-black">Total Bounty</span>
             <span className="text-3xl font-bold text-black">
               ${bounty.totalBounty.toLocaleString()}
             </span>
           </div>
           <div className="flex flex-col items-end">
-            <span className="text-sm text-black">
-              Rate
-            </span>
+            <span className="text-sm text-black">Rate</span>
             <span className="text-xl font-semibold text-black">
               ${bounty.ratePer1kViews}/1k views
             </span>
@@ -40,9 +35,7 @@ export default function BountyCard({ bounty, onClaim }: BountyCardProps) {
         {/* Progress Bar */}
         <div className="mb-4">
           <div className="flex justify-between items-center mb-2">
-            <span className="text-sm font-medium text-black">
-              Progress
-            </span>
+            <span className="text-sm font-medium text-black">Progress</span>
             <span className="text-sm text-gray-700">
               ${remainingBounty.toLocaleString()} remaining
             </span>
@@ -64,7 +57,7 @@ export default function BountyCard({ bounty, onClaim }: BountyCardProps) {
         </div>
 
         {/* Description */}
-        <p className="text-black mb-6 flex-grow">
+        <p className="text-black flex-grow line-clamp-2">
           {bounty.description}
         </p>
 
@@ -74,7 +67,9 @@ export default function BountyCard({ bounty, onClaim }: BountyCardProps) {
             <div className="flex items-center justify-between text-sm">
               <span className="text-gray-600">Submitted by:</span>
               <span className="font-medium text-black">
-                {bounty.submittedBy.username || bounty.submittedBy.email || `User ${bounty.submittedBy.userId}`}
+                {bounty.submittedBy.username ||
+                  bounty.submittedBy.email ||
+                  `User ${bounty.submittedBy.userId}`}
               </span>
             </div>
             {bounty.createdAt && (
@@ -88,15 +83,20 @@ export default function BountyCard({ bounty, onClaim }: BountyCardProps) {
           </div>
         )}
 
-        {/* CTA Button */}
-        <button
-          onClick={onClaim}
-          className="w-full border border-black bg-transparent text-black font-semibold py-3 px-6 group-hover:bg-black group-hover:text-white transition-colors duration-200 mt-auto"
-        >
-          Claim Bounty
-        </button>
+        {/* CTA Button - Only show if not owner */}
+        {!isOwner ? (
+          <button
+            onClick={onClaim}
+            className="w-full border border-black bg-transparent text-black font-semibold py-3 px-6 group-hover:bg-black group-hover:text-white transition-colors duration-200 mt-auto"
+          >
+            Claim Bounty
+          </button>
+        ) : (
+          <div className="w-full border border-gray-300 bg-gray-50 text-gray-500 font-semibold py-3 px-6 text-center mt-auto">
+            Your Bounty
+          </div>
+        )}
       </div>
     </div>
   );
 }
-

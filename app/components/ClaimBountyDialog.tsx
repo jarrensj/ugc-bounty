@@ -17,10 +17,17 @@ interface PreviewData {
   url: string;
 }
 
-export default function ClaimBountyDialog({ bounty, isOpen, onClose }: ClaimBountyDialogProps) {
+export default function ClaimBountyDialog({
+  bounty,
+  isOpen,
+  onClose,
+}: ClaimBountyDialogProps) {
   const [url, setUrl] = useState("");
   const [isValidating, setIsValidating] = useState(false);
-  const [validationResult, setValidationResult] = useState<{valid: boolean; explanation: string} | null>(null);
+  const [validationResult, setValidationResult] = useState<{
+    valid: boolean;
+    explanation: string;
+  } | null>(null);
   const [urlError, setUrlError] = useState<string | null>(null);
   const [previewData, setPreviewData] = useState<PreviewData | null>(null);
   const [isLoadingPreview, setIsLoadingPreview] = useState(false);
@@ -30,10 +37,12 @@ export default function ClaimBountyDialog({ bounty, isOpen, onClose }: ClaimBoun
     try {
       const urlObj = new URL(url);
       const hostname = urlObj.hostname.toLowerCase();
-      return hostname.includes('youtube.com') || 
-             hostname.includes('youtu.be') || 
-             hostname.includes('instagram.com') || 
-             hostname.includes('tiktok.com');
+      return (
+        hostname.includes("youtube.com") ||
+        hostname.includes("youtu.be") ||
+        hostname.includes("instagram.com") ||
+        hostname.includes("tiktok.com")
+      );
     } catch {
       return false;
     }
@@ -43,12 +52,13 @@ export default function ClaimBountyDialog({ bounty, isOpen, onClose }: ClaimBoun
     try {
       const urlObj = new URL(url);
       const hostname = urlObj.hostname.toLowerCase();
-      if (hostname.includes('youtube.com') || hostname.includes('youtu.be')) return 'youtube';
-      if (hostname.includes('instagram.com')) return 'instagram';
-      if (hostname.includes('tiktok.com')) return 'tiktok';
-      return 'unknown';
+      if (hostname.includes("youtube.com") || hostname.includes("youtu.be"))
+        return "youtube";
+      if (hostname.includes("instagram.com")) return "instagram";
+      if (hostname.includes("tiktok.com")) return "tiktok";
+      return "unknown";
     } catch {
-      return 'unknown';
+      return "unknown";
     }
   };
 
@@ -63,23 +73,25 @@ export default function ClaimBountyDialog({ bounty, isOpen, onClose }: ClaimBoun
     setPreviewError(null);
 
     try {
-      const response = await fetch('/api/link-preview', {
-        method: 'POST',
+      const response = await fetch("/api/link-preview", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({ url }),
       });
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to fetch preview');
+        throw new Error(errorData.error || "Failed to fetch preview");
       }
 
       const data = await response.json();
       setPreviewData(data);
     } catch (error) {
-      setPreviewError(error instanceof Error ? error.message : 'Failed to load preview');
+      setPreviewError(
+        error instanceof Error ? error.message : "Failed to load preview"
+      );
       setPreviewData(null);
     } finally {
       setIsLoadingPreview(false);
@@ -102,12 +114,11 @@ export default function ClaimBountyDialog({ bounty, isOpen, onClose }: ClaimBoun
   const handleUrlChange = (newUrl: string) => {
     setUrl(newUrl);
     setUrlError(null);
-    
+
     if (newUrl && !isValidSupportedUrl(newUrl)) {
-      setUrlError('URL must be from YouTube, Instagram, or TikTok');
+      setUrlError("URL must be from YouTube, Instagram, or TikTok");
     }
   };
-
 
   const submitBountyItem = async () => {
     try {
@@ -138,21 +149,21 @@ export default function ClaimBountyDialog({ bounty, isOpen, onClose }: ClaimBoun
   const handleSubmit = async () => {
     if (url && isValidSupportedUrl(url)) {
       const platform = getPlatformFromUrl(url);
-      
+
       if (platform === "youtube") {
         setIsValidating(true);
         setValidationResult(null);
-        
+
         try {
           // First validate the video
           const validationResponse = await fetch('/api/validate-bounty', {
             method: 'POST',
             headers: {
-              'Content-Type': 'application/json',
+              "Content-Type": "application/json",
             },
             body: JSON.stringify({
               url: url,
-              requirements: bounty.description
+              requirements: bounty.description,
             }),
           });
 
@@ -166,7 +177,7 @@ export default function ClaimBountyDialog({ bounty, isOpen, onClose }: ClaimBoun
         } catch {
           setValidationResult({
             valid: false,
-            explanation: 'Failed to validate video. Please try again.'
+            explanation: "Failed to validate video. Please try again.",
           });
         } finally {
           setIsValidating(false);
@@ -219,12 +230,8 @@ export default function ClaimBountyDialog({ bounty, isOpen, onClose }: ClaimBoun
         </div>
 
         <div className="mb-4">
-          <p className="text-lg font-semibold text-black mb-2">
-            {bounty.name}
-          </p>
-          <p className="text-sm text-gray-700">
-            {bounty.description}
-          </p>
+          <p className="text-lg font-semibold text-black mb-2">{bounty.name}</p>
+          <p className="text-sm text-gray-700">{bounty.description}</p>
         </div>
 
         <div className="space-y-4">
@@ -286,18 +293,18 @@ export default function ClaimBountyDialog({ bounty, isOpen, onClose }: ClaimBoun
                       <div className="flex-shrink-0 relative w-20 h-20">
                         <Image
                           src={previewData.image}
-                          alt={previewData.title || 'Preview'}
+                          alt={previewData.title || "Preview"}
                           fill
                           className="object-cover rounded-lg"
                           onError={(e) => {
-                            e.currentTarget.style.display = 'none';
+                            e.currentTarget.style.display = "none";
                           }}
                         />
                       </div>
                     )}
                     <div className="flex-1 min-w-0">
                       <h4 className="font-semibold text-slate-900 dark:text-slate-100 text-sm line-clamp-2">
-                        {previewData.title || 'No title available'}
+                        {previewData.title || "No title available"}
                       </h4>
                       {previewData.description && (
                         <p className="text-slate-600 dark:text-slate-400 text-xs mt-1 line-clamp-2">
@@ -391,7 +398,7 @@ export default function ClaimBountyDialog({ bounty, isOpen, onClose }: ClaimBoun
                   {validationResult.valid && (
                     <button
                       onClick={handleClose}
-                      className="mt-3 bg-emerald-600 dark:bg-emerald-500 text-white font-semibold py-2 px-4 rounded-lg hover:bg-emerald-700 dark:hover:bg-emerald-600 transition-colors duration-200"
+                      className="mt-3 border border-black bg-transparent text-black font-semibold py-2 px-4 hover:bg-black hover:text-white transition-colors duration-200"
                     >
                       Close
                     </button>
@@ -406,7 +413,7 @@ export default function ClaimBountyDialog({ bounty, isOpen, onClose }: ClaimBoun
               <button
                 onClick={handleSubmit}
                 disabled={!url || isValidating || !isValidSupportedUrl(url)}
-                className="flex-1 bg-emerald-600 dark:bg-emerald-500 text-white font-semibold py-3 px-6 rounded-lg hover:bg-emerald-700 dark:hover:bg-emerald-600 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex-1 border border-black bg-transparent text-black font-semibold py-3 px-6 hover:bg-black hover:text-white transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isValidating ? "Validating..." : "Submit"}
               </button>
