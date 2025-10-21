@@ -202,7 +202,7 @@ export default function ProfilePage() {
             {bounties.length === 0 ? (
               <div className="bg-white border border-black p-8 text-center">
                 <p className="text-gray-600 text-lg mb-4">
-                  You haven't created any bounties yet.
+                  You haven&apos;t created any bounties yet.
                 </p>
                 <Link
                   href="/"
@@ -338,7 +338,7 @@ export default function ProfilePage() {
             {submissions.length === 0 ? (
               <div className="bg-white border border-black p-8 text-center">
                 <p className="text-gray-600 text-lg mb-4">
-                  You haven't submitted to any bounties yet.
+                  You haven&apos;t submitted to any bounties yet.
                 </p>
                 <Link
                   href="/"
