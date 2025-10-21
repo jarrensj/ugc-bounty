@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Geist, Geist_Mono, Dancing_Script } from "next/font/google";
 import {
   ClerkProvider,
   SignInButton,
@@ -20,6 +20,11 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+const dancingScript = Dancing_Script({
+  variable: "--font-dancing-script",
+  subsets: ["latin"],
+});
+
 export const metadata: Metadata = {
   title: "ugc bounty",
   description: "ugc bounty",
@@ -34,7 +39,7 @@ export default function RootLayout({
     <ClerkProvider>
       <html lang="en">
         <body
-          className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+          className={`${geistSans.variable} ${geistMono.variable} ${dancingScript.variable} antialiased`}
         >
           <header className="border-b">
             <nav className="container mx-auto px-4 py-4 flex justify-between items-center">
