@@ -11,6 +11,30 @@ interface LinkPreviewResponse {
   url: string;
 }
 
+interface LinkPreviewNetResponse {
+  title: string;
+  description: string;
+  image: string;
+  url: string;
+}
+
+const LINKPREVIEW_API_URL = 'https://api.linkpreview.net/';
+
+async function fetchLinkPreviewData(url: string, apiKey: string): Promise<LinkPreviewNetResponse> {
+  const response = await fetch(`${LINKPREVIEW_API_URL}?q=${encodeURIComponent(url)}`, {
+    method: 'GET',
+    headers: {
+      'X-Linkpreview-Api-Key': apiKey,
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error(`LinkPreview API returned ${response.status}: ${response.statusText}`);
+  }
+
+  return response.json();
+}
+
 export async function POST(request: NextRequest) {
   try {
     console.log('Link preview API called');
@@ -38,39 +62,14 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // For now, return a simple preview based on the platform
     const urlObj = new URL(url);
     const hostname = urlObj.hostname.toLowerCase();
     
     console.log('Detected hostname:', hostname);
-    
-    let previewData: LinkPreviewResponse;
 
-    if (hostname.includes('youtube.com') || hostname.includes('youtu.be')) {
-      console.log('Generating YouTube preview');
-      previewData = {
-        title: 'YouTube Video',
-        description: 'A YouTube video submission for the bounty',
-        image: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZmYwMDAwIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIyMCIgZmlsbD0iI2ZmZmZmZiIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPllvdVR1YmUgVmlkZW88L3RleHQ+PC9zdmc+',
-        url: url
-      };
-    } else if (hostname.includes('instagram.com')) {
-      console.log('Generating Instagram preview');
-      previewData = {
-        title: 'Instagram Post',
-        description: 'An Instagram post submission for the bounty',
-        image: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzAwIiBoZWlnaHQ9IjMwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZTQzMzUzIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIyMCIgZmlsbD0iI2ZmZmZmZiIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPkluc3RhZ3JhbSBQb3N0PC90ZXh0Pjwvc3ZnPg==',
-        url: url
-      };
-    } else if (hostname.includes('tiktok.com')) {
-      console.log('Generating TikTok preview');
-      previewData = {
-        title: 'TikTok Video',
-        description: 'A TikTok video submission for the bounty',
-        image: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzAwIiBoZWlnaHQ9IjQwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjMDAwMDAwIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIyMCIgZmlsbD0iI2ZmZmZmZiIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPlRpa1RvayBWaWRlbzwvdGV4dD48L3N2Zz4=',
-        url: url
-      };
-    } else {
+    // Check if it's a supported platform
+    if (!hostname.includes('youtube.com') && !hostname.includes('youtu.be') && 
+        !hostname.includes('instagram.com') && !hostname.includes('tiktok.com')) {
       console.log('Error: Unsupported platform for hostname:', hostname);
       return NextResponse.json(
         { error: 'Unsupported platform' },
@@ -78,8 +77,35 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    console.log('Returning preview data:', previewData);
-    return NextResponse.json(previewData);
+    const linkPreviewApiKey = process.env.LINKPREVIEW_API_KEY;
+    if (!linkPreviewApiKey) {
+      console.log('Error: LinkPreview API key not configured');
+      return NextResponse.json(
+        { error: 'Preview service not available' },
+        { status: 500 }
+      );
+    }
+
+    try {
+      const linkPreviewData = await fetchLinkPreviewData(url, linkPreviewApiKey);
+
+      const previewData: LinkPreviewResponse = {
+        title: linkPreviewData.title || 'Untitled',
+        description: linkPreviewData.description || 'No description available',
+        image: linkPreviewData.image || '',
+        url: linkPreviewData.url || url
+      };
+
+      console.log('Returning preview data:', previewData);
+      return NextResponse.json(previewData);
+
+    } catch (linkPreviewError) {
+      console.error('LinkPreview error:', linkPreviewError);
+      return NextResponse.json(
+        { error: 'Failed to fetch preview data' },
+        { status: 500 }
+      );
+    }
 
   } catch (error) {
     console.error('Error generating link preview:', error);
