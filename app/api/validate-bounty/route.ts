@@ -35,10 +35,14 @@ function isValidYouTubeUrl(url: string): boolean {
 
 export async function POST(request: NextRequest) {
   try {
+    console.log('Validate bounty API called');
     const body: ValidationRequest = await request.json();
     const { url, requirements } = body;
 
+    console.log('Validation request:', { url, requirements });
+
     if (!url || !requirements) {
+      console.log('Error: Missing required fields - url:', !!url, 'requirements:', !!requirements);
       return NextResponse.json(
         { error: 'URL and requirements are required' },
         { status: 400 }
@@ -46,6 +50,7 @@ export async function POST(request: NextRequest) {
     }
 
     if (!isValidYouTubeUrl(url)) {
+      console.log('Error: Invalid YouTube URL:', url);
       return NextResponse.json({
         valid: false,
         explanation: 'URL must be a valid YouTube video URL'
@@ -53,6 +58,7 @@ export async function POST(request: NextRequest) {
     }
 
     if (!process.env.GEMINI_API_KEY) {
+      console.log('Error: Gemini API key not configured');
       return NextResponse.json(
         { error: 'Gemini API key not configured' },
         { status: 500 }
@@ -97,11 +103,17 @@ Focus specifically on:
 Provide direct, actionable feedback that helps the creator understand exactly what to improve.
 `;
 
+    console.log('Calling Gemini with prompt:', prompt.substring(0, 200) + '...');
+    
     const result = await model.generateContent(prompt);
     const response = await result.response;
     const text = response.text();
 
+    console.log('Gemini response:', text);
+
     const parsedResponse = JSON.parse(text);
+    console.log('Parsed response:', parsedResponse);
+    
     return NextResponse.json(parsedResponse as ValidationResponse);
 
   } catch (error) {
