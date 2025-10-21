@@ -4,6 +4,7 @@ import { bounties as initialBounties, Bounty } from "./data/bounties";
 import { useState } from "react";
 import Link from "next/link";
 import BountyCard from "./components/BountyCard";
+import ClaimBountyDialog from "./components/ClaimBountyDialog";
 
 export default function Home() {
   const [bounties, setBounties] = useState<Bounty[]>(initialBounties);
