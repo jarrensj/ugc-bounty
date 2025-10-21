@@ -6,33 +6,22 @@ interface BountyCardProps {
   isOwner?: boolean;
 }
 
-export default function BountyCard({ bounty, onClaim, isOwner = false }: BountyCardProps) {
+export default function BountyCard({
+  bounty,
+  onClaim,
+  isOwner = false,
+}: BountyCardProps) {
   // Use calculated progress percentage if available, otherwise calculate from claimedBounty
-  const progressPercentage = bounty.progressPercentage !== undefined 
-    ? bounty.progressPercentage 
-    : (bounty.claimedBounty / bounty.totalBounty) * 100;
-  
+  const progressPercentage =
+    bounty.progressPercentage !== undefined
+      ? bounty.progressPercentage
+      : (bounty.claimedBounty / bounty.totalBounty) * 100;
+
   const remainingBounty = bounty.totalBounty - bounty.claimedBounty;
 
   return (
     <div className="group transition-all duration-300 overflow-hidden border border-gray-300 hover:border-black flex flex-col h-[400px]">
       <div className="p-6 flex flex-col flex-grow">
-        {(bounty.logoUrl || bounty.companyName) && (
-          <div className="flex items-center gap-3 mb-4 pb-3 border-b border-gray-200">
-            {bounty.logoUrl && (
-              <img
-                src={bounty.logoUrl}
-                alt={bounty.companyName || "Company logo"}
-                className="h-10 w-10 object-contain"
-              />
-            )}
-            {bounty.companyName && (
-              <span className="text-sm font-medium text-gray-700">
-                {bounty.companyName}
-              </span>
-            )}
-          </div>
-        )}
         <h2 className="text-2xl font-bold text-black mb-3">{bounty.name}</h2>
 
         {/* Total Bounty and Rate */}
@@ -56,13 +45,15 @@ export default function BountyCard({ bounty, onClaim, isOwner = false }: BountyC
           <div className="flex justify-between items-center mb-2">
             <span className="text-sm font-medium text-black">Progress</span>
             <span className="text-sm text-gray-700">
-              {bounty.isCompleted ? '$0 remaining' : `$${remainingBounty.toLocaleString()} remaining`}
+              {bounty.isCompleted
+                ? "$0 remaining"
+                : `$${remainingBounty.toLocaleString()} remaining`}
             </span>
           </div>
           <div className="w-full border border-black h-3 overflow-hidden">
             <div
               className={`h-full transition-all duration-500 ease-out ${
-                bounty.isCompleted ? 'bg-green-500' : 'bg-black'
+                bounty.isCompleted ? "bg-green-500" : "bg-black"
               }`}
               style={{ width: `${progressPercentage}%` }}
             />
@@ -75,11 +66,13 @@ export default function BountyCard({ bounty, onClaim, isOwner = false }: BountyC
               {progressPercentage.toFixed(0)}%
             </span>
           </div>
-          {bounty.totalSubmissionViews !== undefined && bounty.totalSubmissionViews > 0 && (
-            <div className="text-xs text-gray-600 mt-1">
-              {bounty.totalSubmissionViews.toLocaleString()} total views from submissions
-            </div>
-          )}
+          {bounty.totalSubmissionViews !== undefined &&
+            bounty.totalSubmissionViews > 0 && (
+              <div className="text-xs text-gray-600 mt-1">
+                {bounty.totalSubmissionViews.toLocaleString()} total views from
+                submissions
+              </div>
+            )}
         </div>
 
         {/* Description */}
@@ -124,8 +117,19 @@ export default function BountyCard({ bounty, onClaim, isOwner = false }: BountyC
             </button>
           )
         ) : (
-          <div className="w-full border border-gray-300 bg-gray-50 text-gray-500 font-semibold py-3 px-6 text-center mt-auto">
-            Your Bounty
+          <div className="w-full border border-gray-300 bg-gray-50 text-gray-500 font-semibold py-3 px-6 flex items-center justify-center gap-2 mt-auto">
+            {bounty.logoUrl && (
+              <img
+                src={bounty.logoUrl}
+                alt={bounty.companyName || "Company logo"}
+                className="h-5 w-5 object-contain"
+              />
+            )}
+            <span>
+              {bounty.companyName
+                ? `${bounty.companyName}'s Bounty`
+                : "Your Bounty"}
+            </span>
           </div>
         )}
       </div>
