@@ -13,7 +13,22 @@ export default function BountyCard({ bounty, onClaim, isOwner = false }: BountyC
   return (
     <div className="group transition-all duration-300 overflow-hidden border border-gray-300 hover:border-black flex flex-col h-[400px]">
       <div className="p-6 flex flex-col flex-grow">
-        {/* Bounty Name */}
+        {(bounty.logoUrl || bounty.companyName) && (
+          <div className="flex items-center gap-3 mb-4 pb-3 border-b border-gray-200">
+            {bounty.logoUrl && (
+              <img
+                src={bounty.logoUrl}
+                alt={bounty.companyName || "Company logo"}
+                className="h-10 w-10 object-contain"
+              />
+            )}
+            {bounty.companyName && (
+              <span className="text-sm font-medium text-gray-700">
+                {bounty.companyName}
+              </span>
+            )}
+          </div>
+        )}
         <h2 className="text-2xl font-bold text-black mb-3">{bounty.name}</h2>
 
         {/* Total Bounty and Rate */}

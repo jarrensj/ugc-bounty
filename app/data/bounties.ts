@@ -4,7 +4,9 @@ export interface Bounty {
   totalBounty: number;
   ratePer1kViews: number;
   description: string;
-  claimedBounty: number; // Amount of bounty claimed so far
+  claimedBounty: number;
+  logoUrl?: string;
+  companyName?: string;
   submittedBy?: {
     userId: string;
     username?: string;

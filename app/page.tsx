@@ -16,6 +16,8 @@ interface BountyWithCreator {
   rate_per_1k_views: number;
   claimed_bounty: number;
   creator_id: string | null;
+  logo_url?: string | null;
+  company_name?: string | null;
 }
 
 export default function Home() {
@@ -49,6 +51,8 @@ export default function Home() {
             rate_per_1k_views: number;
             claimed_bounty: number;
             creator_id: string | null;
+            logo_url?: string | null;
+            company_name?: string | null;
           }) => ({
             id: bounty.id,
             name: bounty.name,
@@ -56,6 +60,8 @@ export default function Home() {
             totalBounty: bounty.total_bounty,
             ratePer1kViews: bounty.rate_per_1k_views,
             claimedBounty: bounty.claimed_bounty,
+            logoUrl: bounty.logo_url,
+            companyName: bounty.company_name,
           })
         );
         setBounties(mappedBounties);

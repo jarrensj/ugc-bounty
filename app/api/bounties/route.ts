@@ -47,7 +47,7 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json();
-    const { name, description, totalBounty, ratePer1kViews } = body;
+    const { name, description, totalBounty, ratePer1kViews, companyName, logoUrl } = body;
 
     // Validate required fields
     if (!name || !description || totalBounty === undefined || ratePer1kViews === undefined) {
@@ -67,6 +67,8 @@ export async function POST(request: Request) {
         rate_per_1k_views: ratePer1kViews,
         claimed_bounty: 0,
         creator_id: userId,
+        company_name: companyName,
+        logo_url: logoUrl,
       })
       .select()
       .single();

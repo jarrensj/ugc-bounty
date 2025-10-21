@@ -22,6 +22,8 @@ export default function BountyDetailPage({
     totalBounty: number;
     ratePer1kViews: number;
     claimedBounty: number;
+    logoUrl?: string;
+    companyName?: string;
   } | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isOwner, setIsOwner] = useState(false);
@@ -43,6 +45,8 @@ export default function BountyDetailPage({
               totalBounty: foundBounty.total_bounty,
               ratePer1kViews: foundBounty.rate_per_1k_views,
               claimedBounty: foundBounty.claimed_bounty,
+              logoUrl: foundBounty.logo_url,
+              companyName: foundBounty.company_name,
             };
             setBounty(mappedBounty);
             
@@ -107,6 +111,22 @@ export default function BountyDetailPage({
                 </span>
               </div>
               <div className="md:col-span-3 p-6 order-2 md:order-2">
+                {(bounty.logoUrl || bounty.companyName) && (
+                  <div className="flex items-center gap-3 mb-4 pb-3 border-b border-gray-200">
+                    {bounty.logoUrl && (
+                      <img
+                        src={bounty.logoUrl}
+                        alt={bounty.companyName || "Company logo"}
+                        className="h-12 w-12 object-contain"
+                      />
+                    )}
+                    {bounty.companyName && (
+                      <span className="text-lg font-medium text-gray-700">
+                        {bounty.companyName}
+                      </span>
+                    )}
+                  </div>
+                )}
                 <h2 className="text-3xl font-bold mb-2 text-black">
                   {bounty.name}
                 </h2>
