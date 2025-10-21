@@ -107,15 +107,6 @@ export default function ClaimBountyDialog({ bounty, isOpen, onClose }: ClaimBoun
     }
   };
 
-  const handleCalculate = () => {
-    if (url) {
-      const mockViews = Math.floor(Math.random() * 100000) + 1000;
-      const earnings = (mockViews / 1000) * bounty.ratePer1kViews;
-      alert(
-        `Estimated Earnings:\nViews: ${mockViews.toLocaleString()}\nEarnings: $${earnings.toFixed(2)}`
-      );
-    }
-  };
 
   const handleSubmit = async () => {
     if (url && isValidSupportedUrl(url)) {
@@ -364,13 +355,6 @@ export default function ClaimBountyDialog({ bounty, isOpen, onClose }: ClaimBoun
 
           {!validationResult && (
             <div className="flex gap-3 pt-2">
-              <button
-                onClick={handleCalculate}
-                disabled={!url || isValidating}
-                className="flex-1 bg-blue-600 dark:bg-blue-500 text-white font-semibold py-3 px-6 rounded-lg hover:bg-blue-700 dark:hover:bg-blue-600 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                Calculate
-              </button>
               <button
                 onClick={handleSubmit}
                 disabled={!url || isValidating || !isValidSupportedUrl(url)}
