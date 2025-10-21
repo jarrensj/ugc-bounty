@@ -2,11 +2,9 @@
 
 import { bounties } from "@/app/data/bounties";
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
 
 export default function BountyDetailPage({ params }: { params: { id: string } }) {
-  const router = useRouter();
   const bountyId = parseInt(params.id);
   const bounty = bounties.find((b) => b.id === bountyId);
 
@@ -188,7 +186,7 @@ export default function BountyDetailPage({ params }: { params: { id: string } })
                     Submit & Track
                   </h4>
                   <p className="text-sm text-slate-600 dark:text-slate-400">
-                    Submit your URL and we'll track your views
+                    Submit your URL and we&apos;ll track your views
                   </p>
                 </div>
                 <div className="text-center">
