@@ -5,6 +5,12 @@ export interface Bounty {
   ratePer1kViews: number;
   description: string;
   claimedBounty: number; // Amount of bounty claimed so far
+  submittedBy?: {
+    userId: string;
+    username?: string;
+    email?: string;
+  };
+  createdAt?: string;
 }
 
 export const bounties: Bounty[] = [
@@ -15,6 +21,12 @@ export const bounties: Bounty[] = [
     ratePer1kViews: 8,
     description: "Make videos with our green sushi baseball hat on your head and get views",
     claimedBounty: 3200,
+    submittedBy: {
+      userId: "user_1",
+      username: "sushilover",
+      email: "sushi@example.com",
+    },
+    createdAt: "2025-10-15T10:30:00Z",
   },
   {
     id: 2,
@@ -31,6 +43,11 @@ export const bounties: Bounty[] = [
     ratePer1kViews: 10,
     description: "Unbox and demonstrate our latest fitness tracker features",
     claimedBounty: 450,
+    submittedBy: {
+      userId: "user_2",
+      username: "fitnessguru",
+    },
+    createdAt: "2025-10-18T14:20:00Z",
   },
   {
     id: 4,

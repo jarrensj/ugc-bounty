@@ -60,8 +60,25 @@ export default function BountyCard({ bounty, onClaim }: BountyCardProps) {
           {bounty.description}
         </p>
 
-        {/* Spacer */}
-        <div className="h-6" />
+        {/* Submitter Info */}
+        {bounty.submittedBy && (
+          <div className="mb-4 pb-4 border-t border-gray-200 pt-4">
+            <div className="flex items-center justify-between text-sm">
+              <span className="text-gray-600">Submitted by:</span>
+              <span className="font-medium text-black">
+                {bounty.submittedBy.username || bounty.submittedBy.email || `User ${bounty.submittedBy.userId}`}
+              </span>
+            </div>
+            {bounty.createdAt && (
+              <div className="flex items-center justify-between text-xs mt-1">
+                <span className="text-gray-500">Created:</span>
+                <span className="text-gray-600">
+                  {new Date(bounty.createdAt).toLocaleDateString()}
+                </span>
+              </div>
+            )}
+          </div>
+        )}
 
         {/* CTA Button */}
         <button
