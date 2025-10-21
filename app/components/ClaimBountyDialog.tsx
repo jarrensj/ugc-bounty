@@ -53,13 +53,11 @@ export default function ClaimBountyDialog({ bounty, isOpen, onClose }: ClaimBoun
 
   const fetchPreviewData = useCallback(async (url: string) => {
     if (!url || !isValidSupportedUrl(url)) {
-      console.log('Skipping preview fetch - invalid URL:', url);
       setPreviewData(null);
       setPreviewError(null);
       return;
     }
 
-    console.log('Fetching preview data for URL:', url);
     setIsLoadingPreview(true);
     setPreviewError(null);
 
@@ -72,19 +70,14 @@ export default function ClaimBountyDialog({ bounty, isOpen, onClose }: ClaimBoun
         body: JSON.stringify({ url }),
       });
 
-      console.log('Preview API response status:', response.status);
-
       if (!response.ok) {
         const errorData = await response.json();
-        console.error('Preview API error:', errorData);
         throw new Error(errorData.error || 'Failed to fetch preview');
       }
 
       const data = await response.json();
-      console.log('Preview data received:', data);
       setPreviewData(data);
     } catch (error) {
-      console.error('Preview fetch error:', error);
       setPreviewError(error instanceof Error ? error.message : 'Failed to load preview');
       setPreviewData(null);
     } finally {
@@ -92,7 +85,6 @@ export default function ClaimBountyDialog({ bounty, isOpen, onClose }: ClaimBoun
     }
   }, []);
 
-  // Debounced URL preview fetching
   useEffect(() => {
     const timeoutId = setTimeout(() => {
       if (url && isValidSupportedUrl(url)) {
@@ -101,7 +93,7 @@ export default function ClaimBountyDialog({ bounty, isOpen, onClose }: ClaimBoun
         setPreviewData(null);
         setPreviewError(null);
       }
-    }, 1000); // 1 second delay
+    }, 1000);
 
     return () => clearTimeout(timeoutId);
   }, [url, fetchPreviewData]);
@@ -115,17 +107,25 @@ export default function ClaimBountyDialog({ bounty, isOpen, onClose }: ClaimBoun
     }
   };
 
+  const handleCalculate = () => {
+    if (url) {
+      const mockViews = Math.floor(Math.random() * 100000) + 1000;
+      const earnings = (mockViews / 1000) * bounty.ratePer1kViews;
+      alert(
+        `Estimated Earnings:\nViews: ${mockViews.toLocaleString()}\nEarnings: $${earnings.toFixed(2)}`
+      );
+    }
+  };
+
   const handleSubmit = async () => {
     if (url && isValidSupportedUrl(url)) {
       const platform = getPlatformFromUrl(url);
-      console.log('Submitting bounty for platform:', platform, 'URL:', url);
       
       if (platform === "youtube") {
         setIsValidating(true);
         setValidationResult(null);
         
         try {
-          console.log('Calling validate-bounty API with:', { url, requirements: bounty.description });
           const response = await fetch('/api/validate-bounty', {
             method: 'POST',
             headers: {
@@ -137,19 +137,9 @@ export default function ClaimBountyDialog({ bounty, isOpen, onClose }: ClaimBoun
             }),
           });
 
-          console.log('Validate bounty API response status:', response.status);
-
-          if (!response.ok) {
-            const errorData = await response.json();
-            console.error('Validate bounty API error:', errorData);
-            throw new Error(errorData.error || 'Validation failed');
-          }
-
           const result = await response.json();
-          console.log('Validation result:', result);
           setValidationResult(result);
         } catch (error) {
-          console.error('Validation error:', error);
           setValidationResult({
             valid: false,
             explanation: 'Failed to validate video. Please try again.'
@@ -158,8 +148,6 @@ export default function ClaimBountyDialog({ bounty, isOpen, onClose }: ClaimBoun
           setIsValidating(false);
         }
       } else {
-        // For Instagram and TikTok, show success message directly
-        console.log('Non-YouTube platform, showing success message');
         alert(`Submitted!\nBounty: ${bounty.name}\nPlatform: ${platform}\nURL: ${url}`);
         handleClose();
       }
@@ -177,37 +165,33 @@ export default function ClaimBountyDialog({ bounty, isOpen, onClose }: ClaimBoun
     onClose();
   };
 
-
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-      <div className="bg-white dark:bg-slate-900 rounded-xl shadow-2xl max-w-md w-full p-6 border border-slate-200 dark:border-slate-800">
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
+      <div className="bg-[#F5F1E8] shadow-2xl max-w-md w-full p-6 border border-black">
         <div className="flex justify-between items-start mb-6">
-          <h2 className="text-2xl font-bold text-slate-900 dark:text-slate-100">
-            Claim Bounty
-          </h2>
+          <h2 className="text-2xl font-bold text-black">Claim Bounty</h2>
           <button
             onClick={handleClose}
-            className="text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 text-2xl"
+            className="text-black hover:text-gray-600 text-2xl"
           >
             ×
           </button>
         </div>
 
         <div className="mb-4">
-          <p className="text-lg font-semibold text-slate-800 dark:text-slate-200 mb-2">
+          <p className="text-lg font-semibold text-black mb-2">
             {bounty.name}
           </p>
-          <p className="text-sm text-slate-600 dark:text-slate-400">
+          <p className="text-sm text-gray-700">
             {bounty.description}
           </p>
         </div>
 
         <div className="space-y-4">
-          {/* URL Input */}
           <div>
-            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+            <label className="block text-sm font-medium text-gray-700 mb-2">
               Content URL (YouTube, Instagram, or TikTok)
             </label>
             <input
@@ -216,22 +200,26 @@ export default function ClaimBountyDialog({ bounty, isOpen, onClose }: ClaimBoun
               onChange={(e) => handleUrlChange(e.target.value)}
               placeholder="https://youtube.com/watch?v=... or https://instagram.com/... or https://tiktok.com/..."
               className={`w-full px-4 py-2 rounded-lg border ${
-                urlError 
-                  ? 'border-red-300 dark:border-red-700 focus:ring-2 focus:ring-red-500' 
-                  : 'border-slate-300 dark:border-slate-700 focus:ring-2 focus:ring-blue-500'
+                urlError
+                  ? "border-red-300 dark:border-red-700 focus:ring-2 focus:ring-red-500"
+                  : "border-slate-300 dark:border-slate-700 focus:ring-2 focus:ring-blue-500"
               } focus:border-transparent bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 placeholder-slate-400`}
             />
             {urlError && (
-              <p className="mt-2 text-sm text-red-600 dark:text-red-400">{urlError}</p>
+              <p className="mt-2 text-sm text-red-600 dark:text-red-400">
+                {urlError}
+              </p>
             )}
             {url && !urlError && isValidSupportedUrl(url) && (
               <p className="mt-2 text-sm text-emerald-600 dark:text-emerald-400">
-                ✓ {getPlatformFromUrl(url).charAt(0).toUpperCase() + getPlatformFromUrl(url).slice(1)} URL detected
+                ✓{" "}
+                {getPlatformFromUrl(url).charAt(0).toUpperCase() +
+                  getPlatformFromUrl(url).slice(1)}{" "}
+                URL detected
               </p>
             )}
           </div>
 
-          {/* URL Preview */}
           {url && isValidSupportedUrl(url) && (
             <div className="mt-4">
               {isLoadingPreview && (
@@ -287,7 +275,6 @@ export default function ClaimBountyDialog({ bounty, isOpen, onClose }: ClaimBoun
             </div>
           )}
 
-          {/* Validation Result */}
           {isValidating && (
             <div className="bg-blue-50 dark:bg-blue-950 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
               <div className="flex items-center space-x-3">
@@ -300,41 +287,66 @@ export default function ClaimBountyDialog({ bounty, isOpen, onClose }: ClaimBoun
           )}
 
           {validationResult && (
-            <div className={`border rounded-lg p-4 ${
-              validationResult.valid 
-                ? 'bg-emerald-50 dark:bg-emerald-950 border-emerald-200 dark:border-emerald-800' 
-                : 'bg-red-50 dark:bg-red-950 border-red-200 dark:border-red-800'
-            }`}>
+            <div
+              className={`border rounded-lg p-4 ${
+                validationResult.valid
+                  ? "bg-emerald-50 dark:bg-emerald-950 border-emerald-200 dark:border-emerald-800"
+                  : "bg-red-50 dark:bg-red-950 border-red-200 dark:border-red-800"
+              }`}
+            >
               <div className="flex items-start space-x-3">
-                <div className={`flex-shrink-0 w-6 h-6 rounded-full flex items-center justify-center ${
-                  validationResult.valid ? 'bg-emerald-100 dark:bg-emerald-900' : 'bg-red-100 dark:bg-red-900'
-                }`}>
+                <div
+                  className={`flex-shrink-0 w-6 h-6 rounded-full flex items-center justify-center ${
+                    validationResult.valid
+                      ? "bg-emerald-100 dark:bg-emerald-900"
+                      : "bg-red-100 dark:bg-red-900"
+                  }`}
+                >
                   {validationResult.valid ? (
-                    <svg className="w-4 h-4 text-emerald-600 dark:text-emerald-400" fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                    <svg
+                      className="w-4 h-4 text-emerald-600 dark:text-emerald-400"
+                      fill="currentColor"
+                      viewBox="0 0 20 20"
+                    >
+                      <path
+                        fillRule="evenodd"
+                        d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                        clipRule="evenodd"
+                      />
                     </svg>
                   ) : (
-                    <svg className="w-4 h-4 text-red-600 dark:text-red-400" fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+                    <svg
+                      className="w-4 h-4 text-red-600 dark:text-red-400"
+                      fill="currentColor"
+                      viewBox="0 0 20 20"
+                    >
+                      <path
+                        fillRule="evenodd"
+                        d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+                        clipRule="evenodd"
+                      />
                     </svg>
                   )}
                 </div>
                 <div>
-                  <p className={`font-medium ${
-                    validationResult.valid 
-                      ? 'text-emerald-800 dark:text-emerald-200' 
-                      : 'text-red-800 dark:text-red-200'
-                  }`}>
-                    {validationResult.valid 
-                      ? '🎉 Your video is now part of the bounty!' 
-                      : '❌ Video does not meet requirements'
-                    }
+                  <p
+                    className={`font-medium ${
+                      validationResult.valid
+                        ? "text-emerald-800 dark:text-emerald-200"
+                        : "text-red-800 dark:text-red-200"
+                    }`}
+                  >
+                    {validationResult.valid
+                      ? "🎉 Your video is now part of the bounty!"
+                      : "❌ Video does not meet requirements"}
                   </p>
-                  <p className={`text-sm mt-1 ${
-                    validationResult.valid 
-                      ? 'text-emerald-700 dark:text-emerald-300' 
-                      : 'text-red-700 dark:text-red-300'
-                  }`}>
+                  <p
+                    className={`text-sm mt-1 ${
+                      validationResult.valid
+                        ? "text-emerald-700 dark:text-emerald-300"
+                        : "text-red-700 dark:text-red-300"
+                    }`}
+                  >
                     {validationResult.explanation}
                   </p>
                   {validationResult.valid && (
@@ -350,15 +362,21 @@ export default function ClaimBountyDialog({ bounty, isOpen, onClose }: ClaimBoun
             </div>
           )}
 
-          {/* Buttons */}
           {!validationResult && (
             <div className="flex gap-3 pt-2">
               <button
+                onClick={handleCalculate}
+                disabled={!url || isValidating}
+                className="flex-1 bg-blue-600 dark:bg-blue-500 text-white font-semibold py-3 px-6 rounded-lg hover:bg-blue-700 dark:hover:bg-blue-600 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Calculate
+              </button>
+              <button
                 onClick={handleSubmit}
                 disabled={!url || isValidating || !isValidSupportedUrl(url)}
-                className="w-full bg-emerald-600 dark:bg-emerald-500 text-white font-semibold py-3 px-6 rounded-lg hover:bg-emerald-700 dark:hover:bg-emerald-600 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex-1 bg-emerald-600 dark:bg-emerald-500 text-white font-semibold py-3 px-6 rounded-lg hover:bg-emerald-700 dark:hover:bg-emerald-600 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {isValidating ? 'Validating...' : 'Submit'}
+                {isValidating ? "Validating..." : "Submit"}
               </button>
             </div>
           )}
