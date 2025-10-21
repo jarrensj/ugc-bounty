@@ -220,6 +220,61 @@ export default function ClaimBountyDialog({ bounty, isOpen, onClose }: ClaimBoun
             )}
           </div>
 
+          {url && isValidSupportedUrl(url) && (
+            <div className="mt-4">
+              {isLoadingPreview && (
+                <div className="bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-4">
+                  <div className="flex items-center space-x-3">
+                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-600"></div>
+                    <p className="text-slate-600 dark:text-slate-400 font-medium">
+                      Loading preview...
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {previewError && (
+                <div className="bg-red-50 dark:bg-red-950 border border-red-200 dark:border-red-800 rounded-lg p-4">
+                  <p className="text-red-600 dark:text-red-400 text-sm">
+                    ⚠️ Could not load preview: {previewError}
+                  </p>
+                </div>
+              )}
+
+              {previewData && !isLoadingPreview && (
+                <div className="bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-4">
+                  <div className="flex gap-4">
+                    {previewData.image && (
+                      <div className="flex-shrink-0">
+                        <img
+                          src={previewData.image}
+                          alt={previewData.title || 'Preview'}
+                          className="w-20 h-20 object-cover rounded-lg"
+                          onError={(e) => {
+                            e.currentTarget.style.display = 'none';
+                          }}
+                        />
+                      </div>
+                    )}
+                    <div className="flex-1 min-w-0">
+                      <h4 className="font-semibold text-slate-900 dark:text-slate-100 text-sm line-clamp-2">
+                        {previewData.title || 'No title available'}
+                      </h4>
+                      {previewData.description && (
+                        <p className="text-slate-600 dark:text-slate-400 text-xs mt-1 line-clamp-2">
+                          {previewData.description}
+                        </p>
+                      )}
+                      <p className="text-slate-500 dark:text-slate-500 text-xs mt-2 truncate">
+                        {previewData.url}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
           {isValidating && (
             <div className="bg-blue-50 dark:bg-blue-950 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
               <div className="flex items-center space-x-3">
