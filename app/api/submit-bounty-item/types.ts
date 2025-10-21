@@ -70,6 +70,7 @@ export interface YouTubeVideoResponse {
 }
 
 export interface BountyItemData {
+  id?: number;
   url: string;
   bountyId: number;
   title: string;

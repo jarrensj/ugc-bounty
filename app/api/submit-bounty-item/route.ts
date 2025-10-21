@@ -5,6 +5,7 @@ import type {
   BountyItemData,
   PeekalinkResponse,
 } from './types';
+import { createClient } from '@/lib/supabase-server';
 
 const PEEKALINK_API_URL = 'https://api.peekalink.io/';
 
@@ -117,9 +118,43 @@ export async function POST(
       createdAt: new Date().toISOString(),
     };
 
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+
+    if (!user) {
+      return NextResponse.json(
+        { success: false, error: 'Authentication required' },
+        { status: 401 }
+      );
+    }
+
+    const { data: insertedItem, error: insertError } = await supabase
+      .from('bounty_items')
+      .insert({
+        bounty_id: body.bountyId,
+        user_id: user.id,
+        url: body.url,
+        title,
+        cover_image_url: coverImage,
+        author,
+        view_count: viewCount || 0,
+        like_count: 0,
+        platform,
+      })
+      .select()
+      .single();
+
+    if (insertError) {
+      console.error('Error inserting bounty item:', insertError);
+      return NextResponse.json(
+        { success: false, error: 'Failed to save bounty item' },
+        { status: 500 }
+      );
+    }
+
     return NextResponse.json({
       success: true,
-      data: itemData,
+      data: { ...itemData, id: insertedItem.id },
     });
   } catch (error) {
     console.error('Error submitting bounty item:', error);

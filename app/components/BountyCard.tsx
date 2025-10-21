@@ -1,4 +1,7 @@
+"use client";
+
 import { Bounty } from "../data/bounties";
+import { useEffect, useState } from "react";
 
 interface BountyCardProps {
   bounty: Bounty;
@@ -8,6 +11,27 @@ interface BountyCardProps {
 export default function BountyCard({ bounty, onClaim }: BountyCardProps) {
   const progressPercentage = (bounty.claimedBounty / bounty.totalBounty) * 100;
   const remainingBounty = bounty.totalBounty - bounty.claimedBounty;
+  const [participantCount, setParticipantCount] = useState<number>(0);
+
+  useEffect(() => {
+    const fetchParticipantCount = async () => {
+      try {
+        const response = await fetch('/api/bounty-items', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ bountyId: bounty.id }),
+        });
+        if (response.ok) {
+          const data = await response.json();
+          setParticipantCount(data.participantCount);
+        }
+      } catch (error) {
+        console.error('Error fetching participant count:', error);
+      }
+    };
+
+    fetchParticipantCount();
+  }, [bounty.id]);
 
   return (
     <div className="group transition-all duration-300 overflow-hidden border border-gray-300 hover:border-black flex flex-col h-full">
@@ -64,9 +88,16 @@ export default function BountyCard({ bounty, onClaim }: BountyCardProps) {
         </div>
 
         {/* Description */}
-        <p className="text-black mb-6 flex-grow">
+        <p className="text-black mb-4 flex-grow">
           {bounty.description}
         </p>
+
+        {/* Participant Count */}
+        {participantCount > 0 && (
+          <div className="mb-4 text-sm text-gray-700">
+            <span className="font-medium">{participantCount}</span> {participantCount === 1 ? 'person has' : 'people have'} joined this bounty
+          </div>
+        )}
 
         {/* CTA Button */}
         <button

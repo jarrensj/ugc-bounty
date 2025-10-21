@@ -97,6 +97,50 @@ export interface Database {
           updated_at?: string;
         };
       };
+      bounty_items: {
+        Row: {
+          id: number;
+          bounty_id: number;
+          user_id: string;
+          url: string;
+          title: string;
+          cover_image_url: string | null;
+          author: string | null;
+          view_count: number;
+          like_count: number;
+          platform: 'youtube' | 'tiktok' | 'instagram' | 'other' | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: number;
+          bounty_id: number;
+          user_id: string;
+          url: string;
+          title: string;
+          cover_image_url?: string | null;
+          author?: string | null;
+          view_count?: number;
+          like_count?: number;
+          platform?: 'youtube' | 'tiktok' | 'instagram' | 'other' | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: number;
+          bounty_id?: number;
+          user_id?: string;
+          url?: string;
+          title?: string;
+          cover_image_url?: string | null;
+          author?: string | null;
+          view_count?: number;
+          like_count?: number;
+          platform?: 'youtube' | 'tiktok' | 'instagram' | 'other' | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+      };
     };
   };
 }

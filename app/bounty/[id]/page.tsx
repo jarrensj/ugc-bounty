@@ -1,9 +1,24 @@
 "use client";
 
 import { bounties } from "@/app/data/bounties";
-import { useState, use } from "react";
+import { useState, use, useEffect } from "react";
 import Link from "next/link";
 import ClaimBountyDialog from "@/app/components/ClaimBountyDialog";
+import Image from "next/image";
+
+interface BountyItem {
+  id: number;
+  bounty_id: number;
+  user_id: string;
+  url: string;
+  title: string;
+  cover_image_url: string | null;
+  author: string | null;
+  view_count: number;
+  like_count: number;
+  platform: 'youtube' | 'tiktok' | 'instagram' | 'other' | null;
+  created_at: string;
+}
 
 export default function BountyDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
@@ -11,6 +26,26 @@ export default function BountyDetailPage({ params }: { params: Promise<{ id: str
   const bounty = bounties.find((b) => b.id === bountyId);
 
   const [showModal, setShowModal] = useState(false);
+  const [bountyItems, setBountyItems] = useState<BountyItem[]>([]);
+  const [isLoadingItems, setIsLoadingItems] = useState(true);
+
+  useEffect(() => {
+    const fetchBountyItems = async () => {
+      try {
+        const response = await fetch(`/api/bounty-items?bountyId=${bountyId}`);
+        if (response.ok) {
+          const data = await response.json();
+          setBountyItems(data);
+        }
+      } catch (error) {
+        console.error('Error fetching bounty items:', error);
+      } finally {
+        setIsLoadingItems(false);
+      }
+    };
+
+    fetchBountyItems();
+  }, [bountyId]);
 
   if (!bounty) {
     return (
@@ -195,6 +230,85 @@ export default function BountyDetailPage({ params }: { params: Promise<{ id: str
               Submit your content to participate in this bounty
             </button>
           </div>
+        </div>
+
+        {/* Bounty Items Section */}
+        <div className="mt-8">
+          <h2 className="text-3xl font-bold text-slate-900 dark:text-slate-100 mb-6">
+            Submitted Content
+          </h2>
+          
+          {isLoadingItems ? (
+            <div className="flex justify-center items-center py-12">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+            </div>
+          ) : bountyItems.length === 0 ? (
+            <div className="bg-white dark:bg-slate-900 rounded-xl shadow-lg p-12 text-center border border-slate-200 dark:border-slate-800">
+              <p className="text-slate-600 dark:text-slate-400 text-lg">
+                No content submitted yet. Be the first to participate!
+              </p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {bountyItems.map((item) => (
+                <a
+                  key={item.id}
+                  href={item.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="group bg-white dark:bg-slate-900 rounded-xl shadow-lg overflow-hidden border border-slate-200 dark:border-slate-800 hover:shadow-xl transition-all duration-200"
+                >
+                  {item.cover_image_url && (
+                    <div className="relative w-full h-48 bg-slate-100 dark:bg-slate-800">
+                      <Image
+                        src={item.cover_image_url}
+                        alt={item.title}
+                        fill
+                        className="object-cover group-hover:scale-105 transition-transform duration-200"
+                        onError={(e) => {
+                          e.currentTarget.style.display = 'none';
+                        }}
+                      />
+                    </div>
+                  )}
+                  <div className="p-4">
+                    <h3 className="font-semibold text-slate-900 dark:text-slate-100 line-clamp-2 mb-2">
+                      {item.title}
+                    </h3>
+                    {item.author && (
+                      <p className="text-sm text-slate-600 dark:text-slate-400 mb-2">
+                        by {item.author}
+                      </p>
+                    )}
+                    <div className="flex items-center gap-4 text-sm text-slate-500 dark:text-slate-500">
+                      {item.view_count > 0 && (
+                        <span className="flex items-center gap-1">
+                          <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                            <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
+                            <path fillRule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clipRule="evenodd" />
+                          </svg>
+                          {item.view_count.toLocaleString()}
+                        </span>
+                      )}
+                      {item.like_count > 0 && (
+                        <span className="flex items-center gap-1">
+                          <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clipRule="evenodd" />
+                          </svg>
+                          {item.like_count.toLocaleString()}
+                        </span>
+                      )}
+                      {item.platform && (
+                        <span className="capitalize bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded text-xs">
+                          {item.platform}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                </a>
+              ))}
+            </div>
+          )}
         </div>
       </main>
 
