@@ -109,6 +109,32 @@ export default function ClaimBountyDialog({ bounty, isOpen, onClose }: ClaimBoun
   };
 
 
+  const submitBountyItem = async () => {
+    try {
+      const response = await fetch('/api/submit-bounty-item', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          url: url,
+          bountyId: bounty.id
+        }),
+      });
+
+      const result = await response.json();
+      
+      if (!result.success) {
+        throw new Error(result.error || 'Failed to submit bounty item');
+      }
+      
+      return result;
+    } catch (error) {
+      console.error('Error submitting bounty item:', error);
+      throw error;
+    }
+  };
+
   const handleSubmit = async () => {
     if (url && isValidSupportedUrl(url)) {
       const platform = getPlatformFromUrl(url);
@@ -118,7 +144,8 @@ export default function ClaimBountyDialog({ bounty, isOpen, onClose }: ClaimBoun
         setValidationResult(null);
         
         try {
-          const response = await fetch('/api/validate-bounty', {
+          // First validate the video
+          const validationResponse = await fetch('/api/validate-bounty', {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
@@ -129,8 +156,13 @@ export default function ClaimBountyDialog({ bounty, isOpen, onClose }: ClaimBoun
             }),
           });
 
-          const result = await response.json();
+          const result = await validationResponse.json();
           setValidationResult(result);
+          
+          // If validation is successful, submit the bounty item
+          if (result.valid) {
+            await submitBountyItem();
+          }
         } catch {
           setValidationResult({
             valid: false,
@@ -140,8 +172,22 @@ export default function ClaimBountyDialog({ bounty, isOpen, onClose }: ClaimBoun
           setIsValidating(false);
         }
       } else {
-        alert(`Submitted!\nBounty: ${bounty.name}\nPlatform: ${platform}\nURL: ${url}`);
-        handleClose();
+        // For non-YouTube platforms, submit directly without validation
+        try {
+          setIsValidating(true);
+          await submitBountyItem();
+          setValidationResult({
+            valid: true,
+            explanation: `Successfully submitted your ${platform} content to the bounty!`
+          });
+        } catch (error) {
+          setValidationResult({
+            valid: false,
+            explanation: error instanceof Error ? error.message : 'Failed to submit. Please try again.'
+          });
+        } finally {
+          setIsValidating(false);
+        }
       }
     }
   };

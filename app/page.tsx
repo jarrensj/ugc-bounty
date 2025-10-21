@@ -5,8 +5,10 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import BountyCard from "./components/BountyCard";
 import ClaimBountyDialog from "./components/ClaimBountyDialog";
+import { SignInButton, SignUpButton, SignOutButton, useUser } from "@clerk/nextjs";
 
 export default function Home() {
+  const { isSignedIn, user } = useUser();
   const [bounties, setBounties] = useState<Bounty[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedBounty, setSelectedBounty] = useState<number | null>(null);
@@ -114,7 +116,74 @@ export default function Home() {
   };
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen bg-[#F5F1E8]">
+      {/* Header */}
+      <header className="border-b border-gray-300">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-stretch">
+            <div className="py-6">
+              <h1 className="text-4xl font-bold text-black font-[family-name:var(--font-dancing-script)]">
+                Django
+              </h1>
+              <p className="mt-2 text-gray-700">
+                Browse available bounties and start earning today
+              </p>
+            </div>
+            <div className="flex gap-0">
+              <button
+                onClick={() => setShowCreateModal(true)}
+                className="bg-transparent text-black font-semibold px-12 transition-colors duration-200 border-l border-r border-gray-300 hover:border-b-4 hover:border-b-black hover:cursor-pointer -mr-px"
+              >
+                Create Bounty
+              </button>
+              {isSignedIn ? (
+                <>
+                  <Link href="/profile">
+                    <button className="bg-transparent text-black font-semibold px-12 transition-colors duration-200 border-l border-r border-gray-300 hover:border-b-4 hover:border-b-black hover:cursor-pointer -mr-px flex items-center gap-2">
+                      <svg 
+                        className="w-5 h-5" 
+                        fill="none" 
+                        stroke="currentColor" 
+                        viewBox="0 0 24 24"
+                      >
+                        <path 
+                          strokeLinecap="round" 
+                          strokeLinejoin="round" 
+                          strokeWidth={2} 
+                          d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" 
+                        />
+                      </svg>
+                      <span className="text-sm">
+                        {user?.username || user?.firstName || 'Profile'}
+                      </span>
+                    </button>
+                  </Link>
+                  <SignOutButton>
+                    <button className="bg-transparent text-black font-semibold px-12 transition-colors duration-200 border-l border-r border-gray-300 hover:border-b-4 hover:border-b-black hover:cursor-pointer">
+                      Sign Out
+                    </button>
+                  </SignOutButton>
+                </>
+              ) : (
+                <>
+                  <SignUpButton mode="modal">
+                    <button className="bg-transparent text-black font-semibold px-12 transition-colors duration-200 border-l border-r border-gray-300 hover:border-b-4 hover:border-b-black hover:cursor-pointer -mr-px">
+                      Sign Up
+                    </button>
+                  </SignUpButton>
+                  <SignInButton mode="modal">
+                    <button className="bg-transparent text-black font-semibold px-12 transition-colors duration-200 border-l border-r border-gray-300 hover:border-b-4 hover:border-b-black hover:cursor-pointer">
+                      Login
+                    </button>
+                  </SignInButton>
+                </>
+              )}
+            </div>
+          </div>
+        </div>
+      </header>
+
+
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-12">
         {isLoading ? (

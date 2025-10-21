@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono, Dancing_Script } from "next/font/google";
 import { ClerkProvider } from "@clerk/nextjs";
-import Header from "./components/Header";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -35,7 +34,6 @@ export default function RootLayout({
         <body
           className={`${geistSans.variable} ${geistMono.variable} ${dancingScript.variable} antialiased bg-[#F5F1E8]`}
         >
-          <Header />
           {children}
         </body>
       </html>
