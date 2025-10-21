@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { NextRequest, NextResponse } from 'next/server';
 import { auth, currentUser } from '@clerk/nextjs/server';
 import { supabaseAdmin } from '@/lib/supabase-server';
@@ -120,8 +121,8 @@ export async function POST(
     }
 
     // Store submission in Supabase
-    const { data: submission, error: submissionError } = await supabaseAdmin
-      .from('submissions')
+    const { data: submission, error: submissionError } = await (supabaseAdmin
+      .from('submissions') as any)
       .insert({
         bounty_id: body.bountyId,
         user_id: userId,
@@ -142,8 +143,8 @@ export async function POST(
     }
 
     // Update or create user profile
-    await supabaseAdmin
-      .from('user_profiles')
+    await (supabaseAdmin
+      .from('user_profiles') as any)
       .upsert({
         user_id: userId,
         username: user?.username || null,

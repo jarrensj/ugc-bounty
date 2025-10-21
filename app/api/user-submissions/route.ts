@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { NextResponse } from 'next/server';
 import { auth } from '@clerk/nextjs/server';
 import { supabaseAdmin } from '@/lib/supabase-server';
@@ -14,8 +15,8 @@ export async function GET() {
     }
 
     // Fetch user submissions from Supabase
-    const { data: submissions, error } = await supabaseAdmin
-      .from('submissions')
+    const { data: submissions, error } = await (supabaseAdmin
+      .from('submissions') as any)
       .select(`
         *,
         bounties (
