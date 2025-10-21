@@ -3,9 +3,10 @@ import { Bounty } from "../data/bounties";
 interface BountyCardProps {
   bounty: Bounty;
   onClaim: (e: React.MouseEvent) => void;
+  isOwner?: boolean;
 }
 
-export default function BountyCard({ bounty, onClaim }: BountyCardProps) {
+export default function BountyCard({ bounty, onClaim, isOwner = false }: BountyCardProps) {
   const progressPercentage = (bounty.claimedBounty / bounty.totalBounty) * 100;
   const remainingBounty = bounty.totalBounty - bounty.claimedBounty;
 
@@ -68,13 +69,19 @@ export default function BountyCard({ bounty, onClaim }: BountyCardProps) {
           {bounty.description}
         </p>
 
-        {/* CTA Button */}
-        <button
-          onClick={onClaim}
-          className="w-full border border-black bg-transparent text-black font-semibold py-3 px-6 group-hover:bg-black group-hover:text-white transition-colors duration-200 mt-auto"
-        >
-          Claim Bounty
-        </button>
+        {/* CTA Button - Only show if not owner */}
+        {!isOwner ? (
+          <button
+            onClick={onClaim}
+            className="w-full border border-black bg-transparent text-black font-semibold py-3 px-6 group-hover:bg-black group-hover:text-white transition-colors duration-200 mt-auto"
+          >
+            Claim Bounty
+          </button>
+        ) : (
+          <div className="w-full border border-gray-300 bg-gray-50 text-gray-500 font-semibold py-3 px-6 text-center mt-auto">
+            Your Bounty
+          </div>
+        )}
       </div>
     </div>
   );
