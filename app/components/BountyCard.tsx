@@ -2,7 +2,7 @@ import { Bounty } from "../data/bounties";
 
 interface BountyCardProps {
   bounty: Bounty;
-  onClaim: (bountyId: number) => void;
+  onClaim: (e: React.MouseEvent) => void;
 }
 
 export default function BountyCard({ bounty, onClaim }: BountyCardProps) {
@@ -70,7 +70,7 @@ export default function BountyCard({ bounty, onClaim }: BountyCardProps) {
 
         {/* CTA Button */}
         <button
-          onClick={() => onClaim(bounty.id)}
+          onClick={onClaim}
           className="w-full bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900 font-semibold py-3 px-6 rounded-lg hover:bg-slate-800 dark:hover:bg-slate-200 transition-colors duration-200 mt-auto"
         >
           Claim Bounty
