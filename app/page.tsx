@@ -7,12 +7,22 @@ import BountyCard from "./components/BountyCard";
 import ClaimBountyDialog from "./components/ClaimBountyDialog";
 import { useUser } from "@clerk/nextjs";
 
+interface BountyWithCreator {
+  id: number;
+  name: string;
+  description: string;
+  total_bounty: number;
+  rate_per_1k_views: number;
+  claimed_bounty: number;
+  creator_id: string | null;
+}
+
 export default function Home() {
   const { user } = useUser();
   const [bounties, setBounties] = useState<Bounty[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedBounty, setSelectedBounty] = useState<number | null>(null);
-  const [bountiesWithCreatorId, setBountiesWithCreatorId] = useState<any[]>([]);
+  const [bountiesWithCreatorId, setBountiesWithCreatorId] = useState<BountyWithCreator[]>([]);
 
   // Fetch bounties from database on mount
   useEffect(() => {

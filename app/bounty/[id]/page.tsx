@@ -11,7 +11,14 @@ export default function BountyDetailPage({ params }: { params: Promise<{ id: str
   const bountyId = parseInt(id);
 
   const [showModal, setShowModal] = useState(false);
-  const [bounty, setBounty] = useState<any>(null);
+  const [bounty, setBounty] = useState<{
+    id: number;
+    name: string;
+    description: string;
+    totalBounty: number;
+    ratePer1kViews: number;
+    claimedBounty: number;
+  } | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isOwner, setIsOwner] = useState(false);
 
@@ -22,7 +29,7 @@ export default function BountyDetailPage({ params }: { params: Promise<{ id: str
         const response = await fetch("/api/bounties");
         if (response.ok) {
           const data = await response.json();
-          const foundBounty = data.find((b: any) => b.id === bountyId);
+          const foundBounty = data.find((b: { id: number; creator_id?: string | null }) => b.id === bountyId);
           if (foundBounty) {
             // Map to frontend format
             const mappedBounty = {
