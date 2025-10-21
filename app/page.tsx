@@ -5,7 +5,6 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import BountyCard from "./components/BountyCard";
 import ClaimBountyDialog from "./components/ClaimBountyDialog";
-import { SignInButton, SignUpButton } from "@clerk/nextjs";
 
 export default function Home() {
   const [bounties, setBounties] = useState<Bounty[]>([]);
@@ -31,21 +30,23 @@ export default function Home() {
       if (response.ok) {
         const data = await response.json();
         // Map database fields to frontend format
-        const mappedBounties = data.map((bounty: {
-          id: number;
-          name: string;
-          description: string;
-          total_bounty: number;
-          rate_per_1k_views: number;
-          claimed_bounty: number;
-        }) => ({
-          id: bounty.id,
-          name: bounty.name,
-          description: bounty.description,
-          totalBounty: bounty.total_bounty,
-          ratePer1kViews: bounty.rate_per_1k_views,
-          claimedBounty: bounty.claimed_bounty,
-        }));
+        const mappedBounties = data.map(
+          (bounty: {
+            id: number;
+            name: string;
+            description: string;
+            total_bounty: number;
+            rate_per_1k_views: number;
+            claimed_bounty: number;
+          }) => ({
+            id: bounty.id,
+            name: bounty.name,
+            description: bounty.description,
+            totalBounty: bounty.total_bounty,
+            ratePer1kViews: bounty.rate_per_1k_views,
+            claimedBounty: bounty.claimed_bounty,
+          })
+        );
         setBounties(mappedBounties);
       } else {
         console.error("Failed to fetch bounties");
@@ -65,7 +66,7 @@ export default function Home() {
     if (bountyName && bountyDescription && totalBounty && ratePer1k) {
       try {
         setIsCreating(true);
-        
+
         const response = await fetch("/api/bounties", {
           method: "POST",
           headers: {
@@ -113,41 +114,7 @@ export default function Home() {
   };
 
   return (
-    <div className="min-h-screen bg-[#F5F1E8]">
-      {/* Header */}
-      <header className="border-b border-gray-300">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-stretch">
-            <div className="py-6">
-              <h1 className="text-4xl font-bold text-black font-[family-name:var(--font-dancing-script)]">
-                Django
-              </h1>
-              <p className="mt-2 text-gray-700">
-                Browse available bounties and start earning today
-              </p>
-            </div>
-            <div className="flex gap-0">
-              <button
-                onClick={() => setShowCreateModal(true)}
-                className="bg-transparent text-black font-semibold px-12 transition-colors duration-200 border-l border-r border-gray-300 hover:border-b-4 hover:border-b-black hover:cursor-pointer -mr-px"
-              >
-                Create Bounty
-              </button>
-              <SignUpButton mode="modal">
-                <button className="bg-transparent text-black font-semibold px-12 transition-colors duration-200 border-l border-r border-gray-300 hover:border-b-4 hover:border-b-black hover:cursor-pointer -mr-px">
-                  Sign Up
-                </button>
-              </SignUpButton>
-              <SignInButton mode="modal">
-                <button className="bg-transparent text-black font-semibold px-12 transition-colors duration-200 border-l border-r border-gray-300 hover:border-b-4 hover:border-b-black hover:cursor-pointer">
-                  Login
-                </button>
-              </SignInButton>
-            </div>
-          </div>
-        </div>
-      </header>
-
+    <div className="min-h-screen">
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-12">
         {isLoading ? (
@@ -156,7 +123,9 @@ export default function Home() {
           </div>
         ) : bounties.length === 0 ? (
           <div className="text-center py-20">
-            <p className="text-gray-600 text-lg">No bounties available yet. Create one to get started!</p>
+            <p className="text-gray-600 text-lg">
+              No bounties available yet. Create one to get started!
+            </p>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
