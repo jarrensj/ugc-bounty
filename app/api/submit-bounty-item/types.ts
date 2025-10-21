@@ -16,6 +16,13 @@ export interface ImageSize {
   url: string;
 }
 
+export interface TikTokVideo {
+  id: string;
+  title?: string;
+  description?: string;
+  [key: string]: unknown;
+}
+
 export interface PeekalinkResponse {
   id: number;
   ok: boolean;
@@ -29,7 +36,7 @@ export interface PeekalinkResponse {
   title: string;
   description: string;
   image: PeekalinkImage;
-  tiktokVideo?: any;
+  tiktokVideo?: TikTokVideo;
   requestId: string;
 }
 
