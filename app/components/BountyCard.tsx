@@ -89,7 +89,7 @@ export default function BountyCard({ bounty, onClaim, isOwner = false }: BountyC
             onClick={onClaim}
             className="w-full border border-black bg-transparent text-black font-semibold py-3 px-6 group-hover:bg-black group-hover:text-white transition-colors duration-200 mt-auto"
           >
-            Claim Bounty
+            Submit for this Bounty
           </button>
         ) : (
           <div className="w-full border border-gray-300 bg-gray-50 text-gray-500 font-semibold py-3 px-6 text-center mt-auto">
