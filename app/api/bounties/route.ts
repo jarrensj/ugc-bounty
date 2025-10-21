@@ -10,9 +10,16 @@ const supabase = createClient(supabaseUrl, supabaseKey);
 // GET all bounties
 export async function GET() {
   try {
-    const { data, error } = await supabase
+    const { data: bounties, error } = await supabase
       .from('bounties')
-      .select('*')
+      .select(`
+        *,
+        submissions (
+          id,
+          view_count,
+          status
+        )
+      `)
       .order('created_at', { ascending: false });
 
     if (error) {
@@ -23,7 +30,38 @@ export async function GET() {
       );
     }
 
-    return NextResponse.json(data);
+    // Calculate progress based purely on submissions' view counts
+    const bountiesWithProgress = bounties?.map(bounty => {
+      const approvedSubmissions = bounty.submissions?.filter(
+        (submission: any) => submission.status === 'approved'
+      ) || [];
+      
+      const totalViews = approvedSubmissions.reduce(
+        (sum: number, submission: any) => sum + (submission.view_count || 0), 
+        0
+      );
+      
+      // Calculate how much bounty has been "used" based purely on views
+      // Formula: (totalViews / 1000) * ratePer1kViews
+      const usedBounty = (totalViews / 1000) * bounty.rate_per_1k_views;
+      
+      // Cap the used bounty at the total bounty amount
+      const cappedUsedBounty = Math.min(usedBounty, bounty.total_bounty);
+      
+      // Calculate progress percentage (will be 100% if views exceed total)
+      const progressPercentage = Math.min((usedBounty / bounty.total_bounty) * 100, 100);
+      
+      return {
+        ...bounty,
+        // Remove dependency on stored claimed_bounty - use only calculated values
+        calculated_claimed_bounty: cappedUsedBounty,
+        progress_percentage: progressPercentage,
+        total_submission_views: totalViews,
+        is_completed: usedBounty >= bounty.total_bounty
+      };
+    });
+
+    return NextResponse.json(bountiesWithProgress);
   } catch (error) {
     console.error('Error in GET /api/bounties:', error);
     return NextResponse.json(
