@@ -3,11 +3,25 @@
 import { useUser } from "@clerk/nextjs";
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { BountyItemData } from "../api/submit-bounty-item/types";
+interface Submission {
+  id: number;
+  url: string;
+  bountyId: number;
+  bountyName?: string;
+  bountyDescription?: string;
+  title: string;
+  coverImage: string;
+  author?: string | null;
+  viewCount?: number;
+  platform: 'youtube' | 'tiktok' | 'instagram' | 'other';
+  createdAt: string;
+  status?: string;
+  earnedAmount?: number;
+}
 
 export default function ProfilePage() {
   const { isSignedIn, user, isLoaded } = useUser();
-  const [submissions, setSubmissions] = useState<BountyItemData[]>([]);
+  const [submissions, setSubmissions] = useState<Submission[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -141,50 +155,66 @@ export default function ProfilePage() {
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {submissions.map((submission, index) => (
+            {submissions.map((submission) => (
               <div 
-                key={index}
+                key={submission.id}
                 className="bg-white border border-gray-300 overflow-hidden hover:border-black transition-colors duration-200"
               >
-                {submission.coverImage && (
-                  <div className="aspect-video bg-gray-200 overflow-hidden">
-                    <img 
-                      src={submission.coverImage} 
-                      alt={submission.title}
-                      className="w-full h-full object-cover"
-                      onError={(e) => {
-                        e.currentTarget.style.display = 'none';
-                      }}
-                    />
-                  </div>
-                )}
                 <div className="p-4">
-                  <div className="flex items-center gap-2 mb-2">
+                  <div className="flex items-center justify-between gap-2 mb-3">
                     <span className="text-xs font-semibold bg-black text-white px-2 py-1 uppercase">
                       {submission.platform}
                     </span>
-                    {submission.viewCount !== undefined && (
-                      <span className="text-xs text-gray-600">
-                        {submission.viewCount.toLocaleString()} views
+                    {submission.status && (
+                      <span className={`text-xs font-semibold px-2 py-1 uppercase ${
+                        submission.status === 'approved' ? 'bg-green-100 text-green-800' :
+                        submission.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                        'bg-red-100 text-red-800'
+                      }`}>
+                        {submission.status}
                       </span>
                     )}
                   </div>
-                  <h4 className="font-semibold text-black mb-2 line-clamp-2">
-                    {submission.title}
+                  
+                  <h4 className="font-bold text-black mb-1">
+                    {submission.bountyName || submission.title}
                   </h4>
-                  {submission.author && (
-                    <p className="text-sm text-gray-600 mb-2">
-                      by {submission.author}
+                  
+                  {submission.bountyDescription && (
+                    <p className="text-sm text-gray-600 mb-3 line-clamp-2">
+                      {submission.bountyDescription}
                     </p>
                   )}
+
+                  <div className="space-y-2 mb-3">
+                    {submission.viewCount !== undefined && (
+                      <div className="flex justify-between text-sm">
+                        <span className="text-gray-600">Views:</span>
+                        <span className="font-semibold text-black">
+                          {submission.viewCount.toLocaleString()}
+                        </span>
+                      </div>
+                    )}
+                    
+                    {submission.earnedAmount !== undefined && (
+                      <div className="flex justify-between text-sm">
+                        <span className="text-gray-600">Earned:</span>
+                        <span className="font-bold text-green-600">
+                          ${submission.earnedAmount.toFixed(2)}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+
                   <p className="text-xs text-gray-500 mb-3">
                     Submitted {new Date(submission.createdAt).toLocaleDateString()}
                   </p>
+                  
                   <a
                     href={submission.url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-sm text-black hover:underline font-medium"
+                    className="inline-block text-sm text-black hover:underline font-medium"
                   >
                     View Content →
                   </a>

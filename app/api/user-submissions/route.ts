@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@clerk/nextjs/server';
+import { supabaseAdmin } from '@/lib/supabase-server';
 
 export async function GET(request: NextRequest) {
   try {
@@ -12,28 +13,53 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Fetch all submissions from the store
-    const storeResponse = await fetch(`${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/user-submissions/store`, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    });
+    // Fetch user submissions from Supabase
+    const { data: submissions, error } = await supabaseAdmin
+      .from('submissions')
+      .select(`
+        *,
+        bounties (
+          id,
+          name,
+          description,
+          total_bounty,
+          rate_per_1k_views
+        )
+      `)
+      .eq('user_id', userId)
+      .order('created_at', { ascending: false });
 
-    if (!storeResponse.ok) {
-      throw new Error('Failed to fetch submissions from store');
+    if (error) {
+      console.error('Error fetching submissions:', error);
+      return NextResponse.json(
+        { success: false, error: 'Failed to fetch submissions' },
+        { status: 500 }
+      );
     }
 
-    const storeData = await storeResponse.json();
-    
-    // Filter submissions for the current user
-    const userSubmissions = (storeData.submissions || []).filter(
-      (submission: any) => submission.submittedBy?.userId === userId
-    );
+    // Transform database format to frontend format
+    const formattedSubmissions = submissions.map((submission: any) => ({
+      id: submission.id,
+      url: submission.video_url,
+      bountyId: submission.bounty_id,
+      title: submission.bounties?.name || 'Unknown Bounty',
+      coverImage: '', // You can add this field to DB if needed
+      author: null,
+      viewCount: submission.view_count,
+      platform: detectPlatform(submission.video_url),
+      createdAt: submission.created_at,
+      status: submission.status,
+      earnedAmount: submission.earned_amount,
+      bountyName: submission.bounties?.name,
+      bountyDescription: submission.bounties?.description,
+      submittedBy: {
+        userId: submission.user_id,
+      },
+    }));
 
     return NextResponse.json({
       success: true,
-      submissions: userSubmissions,
+      submissions: formattedSubmissions,
     });
   } catch (error) {
     console.error('Error fetching user submissions:', error);
@@ -44,3 +70,22 @@ export async function GET(request: NextRequest) {
   }
 }
 
+function detectPlatform(url: string): 'youtube' | 'tiktok' | 'instagram' | 'other' {
+  try {
+    const hostname = new URL(url).hostname.toLowerCase();
+    
+    if (hostname.includes('youtube.com') || hostname.includes('youtu.be')) {
+      return 'youtube';
+    }
+    if (hostname.includes('tiktok.com')) {
+      return 'tiktok';
+    }
+    if (hostname.includes('instagram.com')) {
+      return 'instagram';
+    }
+    
+    return 'other';
+  } catch {
+    return 'other';
+  }
+}
