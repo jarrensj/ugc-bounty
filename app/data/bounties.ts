@@ -13,7 +13,7 @@ export const bounties: Bounty[] = [
     name: "Sushi Hat Challenge",
     totalBounty: 5000,
     ratePer1kViews: 8,
-    description: "Make videos with this sushi hat and get views",
+    description: "Make videos with this sushi hat on your head and get views",
     claimedBounty: 3200,
   },
   {
