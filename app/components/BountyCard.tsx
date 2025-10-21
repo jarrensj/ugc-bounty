@@ -66,7 +66,9 @@ export default function BountyCard({ bounty, onClaim }: BountyCardProps) {
             <div className="flex items-center justify-between text-sm">
               <span className="text-gray-600">Submitted by:</span>
               <span className="font-medium text-black">
-                {bounty.submittedBy.username || bounty.submittedBy.email || `User ${bounty.submittedBy.userId}`}
+                {bounty.submittedBy.username ||
+                  bounty.submittedBy.email ||
+                  `User ${bounty.submittedBy.userId}`}
               </span>
             </div>
             {bounty.createdAt && (
