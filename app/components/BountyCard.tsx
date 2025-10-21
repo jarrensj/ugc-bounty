@@ -10,8 +10,8 @@ export default function BountyCard({ bounty, onClaim }: BountyCardProps) {
   const remainingBounty = bounty.totalBounty - bounty.claimedBounty;
 
   return (
-    <div className="bg-white dark:bg-slate-900 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden border border-slate-200 dark:border-slate-800 hover:scale-105">
-      <div className="p-6">
+    <div className="bg-white dark:bg-slate-900 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden border border-slate-200 dark:border-slate-800 hover:scale-105 flex flex-col h-full">
+      <div className="p-6 flex flex-col flex-grow">
         {/* Bounty Name */}
         <h2 className="text-2xl font-bold text-slate-900 dark:text-slate-100 mb-3">
           {bounty.name}
@@ -64,14 +64,14 @@ export default function BountyCard({ bounty, onClaim }: BountyCardProps) {
         </div>
 
         {/* Description */}
-        <p className="text-slate-600 dark:text-slate-300 mb-6">
+        <p className="text-slate-600 dark:text-slate-300 mb-6 flex-grow">
           {bounty.description}
         </p>
 
         {/* CTA Button */}
         <button
           onClick={() => onClaim(bounty.id)}
-          className="w-full bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900 font-semibold py-3 px-6 rounded-lg hover:bg-slate-800 dark:hover:bg-slate-200 transition-colors duration-200"
+          className="w-full bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900 font-semibold py-3 px-6 rounded-lg hover:bg-slate-800 dark:hover:bg-slate-200 transition-colors duration-200 mt-auto"
         >
           Claim Bounty
         </button>
