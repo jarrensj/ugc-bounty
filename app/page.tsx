@@ -44,20 +44,27 @@ export default function Home() {
     <div className="min-h-screen bg-[#F5F1E8]">
       {/* Header */}
       <header className="border-b border-gray-300">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          <h1 className="text-4xl font-bold text-black font-[family-name:var(--font-dancing-script)]">
-            Django
-          </h1>
-          <p className="mt-2 text-gray-700">
-            Browse available bounties and start earning today
-          </p>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-stretch">
+            <div className="py-6">
+              <h1 className="text-4xl font-bold text-black font-[family-name:var(--font-dancing-script)]">
+                Django
+              </h1>
+              <p className="mt-2 text-gray-700">
+                Browse available bounties and start earning today
+              </p>
+            </div>
+            <button className="bg-black text-white font-semibold px-12 hover:bg-gray-800 transition-colors duration-200">
+              Sign In
+            </button>
+          </div>
         </div>
       </header>
 
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-12">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
-          {bounties.map((bounty, index) => (
+          {bounties.map((bounty) => (
             <div
               key={bounty.id}
               className="relative md:[&:not(:nth-child(2n+1))]:ml-[-1px] lg:[&:not(:nth-child(3n+1))]:ml-[-1px] [&:not(:first-child)]:md:[&:nth-child(2n+1)]:mt-[-1px] [&:not(:first-child)]:lg:[&:nth-child(3n+1)]:mt-[-1px] md:[&:nth-child(n+3)]:mt-[-1px] lg:[&:nth-child(n+4)]:mt-[-1px] [&:not(:first-child)]:mt-[-1px] first:mt-[-1px] md:[&:nth-child(2)]:mt-[-1px] lg:[&:nth-child(3)]:mt-[-1px] hover:z-10"

@@ -10,7 +10,7 @@ export default function BountyCard({ bounty, onClaim }: BountyCardProps) {
   const remainingBounty = bounty.totalBounty - bounty.claimedBounty;
 
   return (
-    <div className="transition-all duration-300 overflow-hidden border border-gray-300 hover:border-black flex flex-col h-full">
+    <div className="group transition-all duration-300 overflow-hidden border border-gray-300 hover:border-black flex flex-col h-full">
       <div className="p-6 flex flex-col flex-grow">
         {/* Bounty Name */}
         <h2 className="text-2xl font-bold text-black mb-3">
@@ -71,7 +71,7 @@ export default function BountyCard({ bounty, onClaim }: BountyCardProps) {
         {/* CTA Button */}
         <button
           onClick={() => onClaim(bounty.id)}
-          className="w-full bg-black text-white font-semibold py-3 px-6 hover:bg-gray-800 transition-colors duration-200 mt-auto"
+          className="w-full border border-black bg-transparent text-black font-semibold py-3 px-6 group-hover:bg-black group-hover:text-white transition-colors duration-200 mt-auto"
         >
           Claim Bounty
         </button>
