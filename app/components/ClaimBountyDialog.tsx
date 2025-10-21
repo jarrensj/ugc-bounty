@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { Bounty } from "@/app/data/bounties";
+import Image from "next/image";
 
 interface ClaimBountyDialogProps {
   bounty: Bounty;
@@ -282,11 +283,12 @@ export default function ClaimBountyDialog({ bounty, isOpen, onClose }: ClaimBoun
                 <div className="bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-4">
                   <div className="flex gap-4">
                     {previewData.image && (
-                      <div className="flex-shrink-0">
-                        <img
+                      <div className="flex-shrink-0 relative w-20 h-20">
+                        <Image
                           src={previewData.image}
                           alt={previewData.title || 'Preview'}
-                          className="w-20 h-20 object-cover rounded-lg"
+                          fill
+                          className="object-cover rounded-lg"
                           onError={(e) => {
                             e.currentTarget.style.display = 'none';
                           }}
