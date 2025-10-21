@@ -8,6 +8,7 @@ interface ClaimBountyDialogProps {
   bounty: Bounty;
   isOpen: boolean;
   onClose: () => void;
+  isCompleted?: boolean;
 }
 
 interface PreviewData {
@@ -21,6 +22,7 @@ export default function ClaimBountyDialog({
   bounty,
   isOpen,
   onClose,
+  isCompleted = false,
 }: ClaimBountyDialogProps) {
   const [url, setUrl] = useState("");
   const [isValidating, setIsValidating] = useState(false);
@@ -232,6 +234,16 @@ export default function ClaimBountyDialog({
         <div className="mb-4">
           <p className="text-lg font-semibold text-black mb-2">{bounty.name}</p>
           <p className="text-sm text-gray-700">{bounty.description}</p>
+          {isCompleted && (
+            <div className="mt-3 p-3 bg-green-50 border border-green-200 rounded-lg">
+              <p className="text-green-800 font-medium text-sm">
+                ✓ This bounty has been completed
+              </p>
+              <p className="text-green-700 text-xs mt-1">
+                No new submissions are being accepted for this bounty.
+              </p>
+            </div>
+          )}
         </div>
 
         <div className="space-y-4">
@@ -243,12 +255,15 @@ export default function ClaimBountyDialog({
               type="url"
               value={url}
               onChange={(e) => handleUrlChange(e.target.value)}
-              placeholder="https://youtube.com/watch?v=... or https://instagram.com/... or https://tiktok.com/..."
+              placeholder={isCompleted ? "Submissions are closed for this bounty" : "https://youtube.com/watch?v=... or https://instagram.com/... or https://tiktok.com/..."}
+              disabled={isCompleted}
               className={`w-full px-4 py-2 rounded-lg border ${
                 urlError
                   ? "border-red-300 dark:border-red-700 focus:ring-2 focus:ring-red-500"
                   : "border-slate-300 dark:border-slate-700 focus:ring-2 focus:ring-blue-500"
-              } focus:border-transparent bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 placeholder-slate-400`}
+              } focus:border-transparent bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 placeholder-slate-400 ${
+                isCompleted ? "opacity-50 cursor-not-allowed" : ""
+              }`}
             />
             {urlError && (
               <p className="mt-2 text-sm text-red-600 dark:text-red-400">
@@ -410,13 +425,19 @@ export default function ClaimBountyDialog({
 
           {!validationResult && (
             <div className="flex gap-3 pt-2">
-              <button
-                onClick={handleSubmit}
-                disabled={!url || isValidating || !isValidSupportedUrl(url)}
-                className="flex-1 border border-black bg-transparent text-black font-semibold py-3 px-6 hover:bg-black hover:text-white transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {isValidating ? "Validating..." : "Submit"}
-              </button>
+              {isCompleted ? (
+                <div className="flex-1 border border-gray-300 bg-gray-50 text-gray-500 font-semibold py-3 px-6 text-center">
+                  Submissions Closed
+                </div>
+              ) : (
+                <button
+                  onClick={handleSubmit}
+                  disabled={!url || isValidating || !isValidSupportedUrl(url)}
+                  className="flex-1 border border-black bg-transparent text-black font-semibold py-3 px-6 hover:bg-black hover:text-white transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {isValidating ? "Validating..." : "Submit"}
+                </button>
+              )}
             </div>
           )}
         </div>

@@ -412,6 +412,12 @@ export default function ProfilePage() {
                       </div>
                     </div>
 
+                    <div className="mt-4 pt-4 border-t border-gray-300">
+                      <div className="flex justify-between items-center text-sm text-gray-600">
+                        <span>Submitted: {new Date(submission.created_at).toLocaleDateString()}</span>
+                      </div>
+                    </div>
+
                     {submission.validation_explanation && (
                       <div className="mt-4 pt-4 border-t border-gray-300">
                         <p className="text-sm text-gray-600 mb-1">Note:</p>
