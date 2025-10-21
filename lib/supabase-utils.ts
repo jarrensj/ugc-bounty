@@ -1,9 +1,4 @@
 import { supabaseAdmin } from './supabase-server';
-import type { Database } from '../types/database.types';
-
-type Bounty = Database['public']['Tables']['bounties']['Row'];
-type Submission = Database['public']['Tables']['submissions']['Row'];
-type UserProfile = Database['public']['Tables']['user_profiles']['Row'];
 
 /**
  * Get all active bounties with remaining balance
@@ -97,7 +92,12 @@ export async function updateSubmissionStatus(
   validationExplanation: string,
   viewCount?: number
 ) {
-  const updateData: any = {
+  const updateData: {
+    status: 'pending' | 'approved' | 'rejected';
+    validation_explanation: string;
+    view_count?: number;
+    earned_amount?: number;
+  } = {
     status,
     validation_explanation: validationExplanation
   };

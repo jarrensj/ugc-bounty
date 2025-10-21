@@ -1,6 +1,6 @@
 "use client";
 
-import { bounties as initialBounties, Bounty } from "./data/bounties";
+import { Bounty } from "./data/bounties";
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import BountyCard from "./components/BountyCard";
@@ -31,7 +31,14 @@ export default function Home() {
       if (response.ok) {
         const data = await response.json();
         // Map database fields to frontend format
-        const mappedBounties = data.map((bounty: any) => ({
+        const mappedBounties = data.map((bounty: {
+          id: number;
+          name: string;
+          description: string;
+          total_bounty: number;
+          rate_per_1k_views: number;
+          claimed_bounty: number;
+        }) => ({
           id: bounty.id,
           name: bounty.name,
           description: bounty.description,

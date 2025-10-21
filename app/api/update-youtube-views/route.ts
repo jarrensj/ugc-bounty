@@ -37,7 +37,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 
     // In a real implementation, you would fetch bounty items from your database
     // For now, we'll simulate this with a placeholder
-    let itemsToUpdate: BountyItem[] = [];
+    const itemsToUpdate: BountyItem[] = [];
 
     if (bountyItemIds && Array.isArray(bountyItemIds)) {
       // Fetch specific items by IDs
