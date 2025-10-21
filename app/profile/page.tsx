@@ -10,6 +10,7 @@ interface Submission {
   bountyName?: string;
   bountyDescription?: string;
   title: string;
+  description?: string;
   coverImage: string;
   author?: string | null;
   viewCount?: number;
@@ -176,8 +177,36 @@ export default function ProfilePage() {
                     )}
                   </div>
                   
+                  {/* Video Preview */}
+                  <div className="bg-slate-50 border border-slate-200 rounded-lg p-3 mb-3">
+                    <div className="flex gap-3">
+                      {submission.coverImage && (
+                        <div className="flex-shrink-0 relative w-16 h-16">
+                          <img
+                            src={submission.coverImage}
+                            alt={submission.title || 'Preview'}
+                            className="w-full h-full object-cover rounded-lg"
+                            onError={(e) => {
+                              e.currentTarget.style.display = 'none';
+                            }}
+                          />
+                        </div>
+                      )}
+                      <div className="flex-1 min-w-0">
+                        <h4 className="font-semibold text-black text-sm line-clamp-2 mb-1">
+                          {submission.title || 'No title available'}
+                        </h4>
+                        {submission.description && (
+                          <p className="text-gray-600 text-xs line-clamp-2">
+                            {submission.description}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
                   <h4 className="font-bold text-black mb-1">
-                    {submission.bountyName || submission.title}
+                    {submission.bountyName}
                   </h4>
                   
                   {submission.bountyDescription && (
