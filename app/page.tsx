@@ -5,9 +5,10 @@ import { useState } from "react";
 import Link from "next/link";
 import BountyCard from "./components/BountyCard";
 import ClaimBountyDialog from "./components/ClaimBountyDialog";
-import { SignInButton, SignUpButton } from "@clerk/nextjs";
+import { SignInButton, SignUpButton, SignOutButton, useUser } from "@clerk/nextjs";
 
 export default function Home() {
+  const { isSignedIn, user } = useUser();
   const [bounties, setBounties] = useState<Bounty[]>(initialBounties);
   const [selectedBounty, setSelectedBounty] = useState<number | null>(null);
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -63,16 +64,33 @@ export default function Home() {
               >
                 Create Bounty
               </button>
-              <SignUpButton mode="modal">
-                <button className="bg-transparent text-black font-semibold px-12 transition-colors duration-200 border-l border-r border-gray-300 hover:border-b-4 hover:border-b-black hover:cursor-pointer -mr-px">
-                  Sign Up
-                </button>
-              </SignUpButton>
-              <SignInButton mode="modal">
-                <button className="bg-transparent text-black font-semibold px-12 transition-colors duration-200 border-l border-r border-gray-300 hover:border-b-4 hover:border-b-black hover:cursor-pointer">
-                  Login
-                </button>
-              </SignInButton>
+              {isSignedIn ? (
+                <>
+                  <div className="bg-transparent text-black font-semibold px-12 transition-colors duration-200 border-l border-r border-gray-300 flex items-center -mr-px">
+                    <span className="text-sm">
+                      {user?.username || user?.emailAddresses[0]?.emailAddress || 'User'}
+                    </span>
+                  </div>
+                  <SignOutButton>
+                    <button className="bg-transparent text-black font-semibold px-12 transition-colors duration-200 border-l border-r border-gray-300 hover:border-b-4 hover:border-b-black hover:cursor-pointer">
+                      Sign Out
+                    </button>
+                  </SignOutButton>
+                </>
+              ) : (
+                <>
+                  <SignUpButton mode="modal">
+                    <button className="bg-transparent text-black font-semibold px-12 transition-colors duration-200 border-l border-r border-gray-300 hover:border-b-4 hover:border-b-black hover:cursor-pointer -mr-px">
+                      Sign Up
+                    </button>
+                  </SignUpButton>
+                  <SignInButton mode="modal">
+                    <button className="bg-transparent text-black font-semibold px-12 transition-colors duration-200 border-l border-r border-gray-300 hover:border-b-4 hover:border-b-black hover:cursor-pointer">
+                      Login
+                    </button>
+                  </SignInButton>
+                </>
+              )}
             </div>
           </div>
         </div>
