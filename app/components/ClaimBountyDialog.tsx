@@ -124,26 +124,26 @@ export default function ClaimBountyDialog({
 
   const submitBountyItem = async () => {
     try {
-      const response = await fetch('/api/submit-bounty-item', {
-        method: 'POST',
+      const response = await fetch("/api/submit-bounty-item", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({
           url: url,
-          bountyId: bounty.id
+          bountyId: bounty.id,
         }),
       });
 
       const result = await response.json();
-      
+
       if (!result.success) {
-        throw new Error(result.error || 'Failed to submit bounty item');
+        throw new Error(result.error || "Failed to submit bounty item");
       }
-      
+
       return result;
     } catch (error) {
-      console.error('Error submitting bounty item:', error);
+      console.error("Error submitting bounty item:", error);
       throw error;
     }
   };
@@ -158,8 +158,8 @@ export default function ClaimBountyDialog({
 
         try {
           // First validate the video
-          const validationResponse = await fetch('/api/validate-bounty', {
-            method: 'POST',
+          const validationResponse = await fetch("/api/validate-bounty", {
+            method: "POST",
             headers: {
               "Content-Type": "application/json",
             },
@@ -171,7 +171,7 @@ export default function ClaimBountyDialog({
 
           const result = await validationResponse.json();
           setValidationResult(result);
-          
+
           // If validation is successful, submit the bounty item
           if (result.valid) {
             await submitBountyItem();
@@ -191,12 +191,15 @@ export default function ClaimBountyDialog({
           await submitBountyItem();
           setValidationResult({
             valid: true,
-            explanation: `Successfully submitted your ${platform} content to the bounty!`
+            explanation: `Successfully submitted your ${platform} content to the bounty!`,
           });
         } catch (error) {
           setValidationResult({
             valid: false,
-            explanation: error instanceof Error ? error.message : 'Failed to submit. Please try again.'
+            explanation:
+              error instanceof Error
+                ? error.message
+                : "Failed to submit. Please try again.",
           });
         } finally {
           setIsValidating(false);
@@ -255,13 +258,17 @@ export default function ClaimBountyDialog({
               type="url"
               value={url}
               onChange={(e) => handleUrlChange(e.target.value)}
-              placeholder={isCompleted ? "Submissions are closed for this bounty" : "https://youtube.com/watch?v=... or https://instagram.com/... or https://tiktok.com/..."}
+              placeholder={
+                isCompleted
+                  ? "Submissions are closed for this bounty"
+                  : "https://youtube.com/watch?v=... or https://instagram.com/... or https://tiktok.com/..."
+              }
               disabled={isCompleted}
-              className={`w-full px-4 py-2 rounded-lg border ${
+              className={`w-full px-4 py-2 border ${
                 urlError
                   ? "border-red-300 dark:border-red-700 focus:ring-2 focus:ring-red-500"
                   : "border-slate-300 dark:border-slate-700 focus:ring-2 focus:ring-blue-500"
-              } focus:border-transparent bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 placeholder-slate-400 ${
+              } focus:border-transparent text-slate-900 dark:text-slate-100 placeholder-slate-400 ${
                 isCompleted ? "opacity-50 cursor-not-allowed" : ""
               }`}
             />
