@@ -385,7 +385,7 @@ export default function ProfilePage() {
                       </span>
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-4 gap-4 pt-4 border-t border-gray-300">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-4 border-t border-gray-300">
                       <div>
                         <p className="text-sm text-gray-600 mb-1">Views</p>
                         <p className="text-lg font-semibold text-black">
@@ -393,22 +393,24 @@ export default function ProfilePage() {
                         </p>
                       </div>
                       <div>
-                        <p className="text-sm text-gray-600 mb-1">Rate per 1k</p>
-                        <p className="text-lg font-semibold text-black">
-                          ${submission.bounties?.rate_per_1k_views.toFixed(2) || '0.00'}
-                        </p>
-                      </div>
-                      <div>
                         <p className="text-sm text-gray-600 mb-1">Earned</p>
                         <p className="text-lg font-semibold text-green-600">
-                          ${submission.earned_amount.toFixed(2)}
+                          ${calculateEarnings(submission.view_count, submission.bounties?.rate_per_1k_views || 0).toFixed(2)}
                         </p>
                       </div>
                       <div>
-                        <p className="text-sm text-gray-600 mb-1">Potential</p>
-                        <p className="text-lg font-semibold text-blue-600">
-                          ${calculateEarnings(submission.view_count, submission.bounties?.rate_per_1k_views || 0).toFixed(2)}
+                        <p className="text-sm text-gray-600 mb-1">
+                          Submitted
                         </p>
+                        <p className="text-sm text-black">
+                          {new Date(submission.created_at).toLocaleDateString()}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="mt-4 pt-4 border-t border-gray-300">
+                      <div className="flex justify-between items-center text-sm text-gray-600">
+                        <span>Submitted: {new Date(submission.created_at).toLocaleDateString()}</span>
                       </div>
                     </div>
 

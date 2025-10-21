@@ -7,7 +7,11 @@ interface BountyCardProps {
 }
 
 export default function BountyCard({ bounty, onClaim, isOwner = false }: BountyCardProps) {
-  const progressPercentage = (bounty.claimedBounty / bounty.totalBounty) * 100;
+  // Use calculated progress percentage if available, otherwise calculate from claimedBounty
+  const progressPercentage = bounty.progressPercentage !== undefined 
+    ? bounty.progressPercentage 
+    : (bounty.claimedBounty / bounty.totalBounty) * 100;
+  
   const remainingBounty = bounty.totalBounty - bounty.claimedBounty;
 
   return (
@@ -37,12 +41,14 @@ export default function BountyCard({ bounty, onClaim, isOwner = false }: BountyC
           <div className="flex justify-between items-center mb-2">
             <span className="text-sm font-medium text-black">Progress</span>
             <span className="text-sm text-gray-700">
-              ${remainingBounty.toLocaleString()} remaining
+              {bounty.isCompleted ? '$0 remaining' : `$${remainingBounty.toLocaleString()} remaining`}
             </span>
           </div>
           <div className="w-full border border-black h-3 overflow-hidden">
             <div
-              className="bg-black h-full transition-all duration-500 ease-out"
+              className={`h-full transition-all duration-500 ease-out ${
+                bounty.isCompleted ? 'bg-green-500' : 'bg-black'
+              }`}
               style={{ width: `${progressPercentage}%` }}
             />
           </div>
@@ -54,6 +60,11 @@ export default function BountyCard({ bounty, onClaim, isOwner = false }: BountyC
               {progressPercentage.toFixed(0)}%
             </span>
           </div>
+          {bounty.totalSubmissionViews !== undefined && bounty.totalSubmissionViews > 0 && (
+            <div className="text-xs text-gray-600 mt-1">
+              {bounty.totalSubmissionViews.toLocaleString()} total views from submissions
+            </div>
+          )}
         </div>
 
         {/* Description */}
@@ -85,12 +96,18 @@ export default function BountyCard({ bounty, onClaim, isOwner = false }: BountyC
 
         {/* CTA Button - Only show if not owner */}
         {!isOwner ? (
-          <button
-            onClick={onClaim}
-            className="w-full border border-black bg-transparent text-black font-semibold py-3 px-6 group-hover:bg-black group-hover:text-white transition-colors duration-200 mt-auto"
-          >
-            Claim Bounty
-          </button>
+          bounty.isCompleted ? (
+            <div className="w-full border border-green-500 bg-green-50 text-green-700 font-semibold py-3 px-6 text-center mt-auto">
+              Bounty Completed
+            </div>
+          ) : (
+            <button
+              onClick={onClaim}
+              className="w-full border border-black bg-transparent text-black font-semibold py-3 px-6 group-hover:bg-black group-hover:text-white transition-colors duration-200 mt-auto"
+            >
+              Claim Bounty
+            </button>
+          )
         ) : (
           <div className="w-full border border-gray-300 bg-gray-50 text-gray-500 font-semibold py-3 px-6 text-center mt-auto">
             Your Bounty

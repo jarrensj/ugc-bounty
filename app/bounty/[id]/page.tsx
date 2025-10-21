@@ -49,6 +49,36 @@ export default function BountyDetailPage({
   const [isLoading, setIsLoading] = useState(true);
   const [isOwner, setIsOwner] = useState(false);
 
+  // Calculate progress purely from submissions
+  const calculateProgressFromSubmissions = () => {
+    if (!bounty || !submissions.length) {
+      return {
+        claimedBounty: 0,
+        progressPercentage: 0,
+        totalViews: 0,
+        isCompleted: false
+      };
+    }
+
+    const approvedSubmissions = submissions.filter(sub => sub.status === 'approved');
+    const totalViews = approvedSubmissions.reduce((sum, sub) => sum + (sub.view_count || 0), 0);
+    
+    // Calculate how much bounty has been "used" based purely on views
+    const usedBounty = (totalViews / 1000) * bounty.ratePer1kViews;
+    const cappedUsedBounty = Math.min(usedBounty, bounty.totalBounty);
+    const progressPercentage = Math.min((usedBounty / bounty.totalBounty) * 100, 100);
+    const isCompleted = usedBounty >= bounty.totalBounty;
+
+    return {
+      claimedBounty: cappedUsedBounty,
+      progressPercentage,
+      totalViews,
+      isCompleted
+    };
+  };
+
+  const progressData = calculateProgressFromSubmissions();
+
   useEffect(() => {
     const fetchBounty = async () => {
       try {
@@ -58,14 +88,14 @@ export default function BountyDetailPage({
           const data = await response.json();
           const foundBounty = data.find((b: { id: number; creator_id?: string | null }) => b.id === bountyId);
           if (foundBounty) {
-            // Map to frontend format
+            // Map to frontend format - only use basic bounty data
             const mappedBounty = {
               id: foundBounty.id,
               name: foundBounty.name,
               description: foundBounty.description,
               totalBounty: foundBounty.total_bounty,
               ratePer1kViews: foundBounty.rate_per_1k_views,
-              claimedBounty: foundBounty.claimed_bounty,
+              claimedBounty: 0, // Will be calculated from submissions
             };
             setBounty(mappedBounty);
             
@@ -195,7 +225,51 @@ export default function BountyDetailPage({
                       ${(100 * bounty.ratePer1kViews).toFixed(2)}
                     </span>
                   </div>
+                  
                 </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Progress Section */}
+          <div className="border-b border-gray-300">
+            <div className="p-6">
+              <h3 className="text-lg font-semibold text-black mb-4">
+                Bounty Progress
+              </h3>
+              <div className="space-y-4">
+                <div className="flex justify-between items-center">
+                  <span className="text-sm font-medium text-black">Progress</span>
+                  <span className="text-sm text-gray-700">
+                    {progressData.isCompleted ? '$0 remaining' : `$${(bounty.totalBounty - progressData.claimedBounty).toLocaleString()} remaining`}
+                  </span>
+                </div>
+                <div className="w-full border border-black h-4 overflow-hidden">
+                  <div
+                    className={`h-full transition-all duration-500 ease-out ${
+                      progressData.isCompleted ? 'bg-green-500' : 'bg-black'
+                    }`}
+                    style={{ width: `${progressData.progressPercentage}%` }}
+                  />
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-gray-700">
+                    ${progressData.claimedBounty.toLocaleString()} claimed
+                  </span>
+                  <span className="text-sm font-semibold text-gray-700">
+                    {progressData.progressPercentage.toFixed(0)}%
+                  </span>
+                </div>
+                {progressData.totalViews > 0 && (
+                  <div className="text-sm text-gray-600">
+                    {progressData.totalViews.toLocaleString()} total views from submissions
+                  </div>
+                )}
+                {progressData.isCompleted && (
+                  <div className="text-sm text-green-600 font-medium">
+                    ✓ This bounty has been completed
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -280,12 +354,18 @@ export default function BountyDetailPage({
 
             {/* CTA Button - Only show if not owner */}
             {!isOwner ? (
-              <button
-                onClick={() => setShowModal(true)}
-                className="w-full bg-black text-white font-bold py-4 px-8 hover:bg-gray-800 transition-all duration-200 text-lg"
-              >
-                Submit your content to participate in this bounty
-              </button>
+              progressData.isCompleted ? (
+                <div className="w-full border-2 border-green-500 bg-green-50 text-green-700 font-bold py-4 px-8 text-center text-lg">
+                  This bounty has been completed
+                </div>
+              ) : (
+                <button
+                  onClick={() => setShowModal(true)}
+                  className="w-full bg-black text-white font-bold py-4 px-8 hover:bg-gray-800 transition-all duration-200 text-lg"
+                >
+                  Submit your content to participate in this bounty
+                </button>
+              )
             ) : (
               <div className="w-full border-2 border-gray-300 bg-gray-50 text-gray-600 font-bold py-4 px-8 text-center text-lg">
                 This is your bounty. Creators will submit their content here.
@@ -396,6 +476,7 @@ export default function BountyDetailPage({
           bounty={bounty}
           isOpen={showModal}
           onClose={() => setShowModal(false)}
+          isCompleted={progressData.isCompleted}
         />
       )}
     </div>
