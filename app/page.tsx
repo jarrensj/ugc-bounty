@@ -1,6 +1,6 @@
 "use client";
 
-import { bounties as initialBounties, Bounty } from "./data/bounties";
+import { Bounty } from "./data/bounties";
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import BountyCard from "./components/BountyCard";

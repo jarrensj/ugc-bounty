@@ -163,7 +163,7 @@ export default function ClaimBountyDialog({ bounty, isOpen, onClose }: ClaimBoun
           if (result.valid) {
             await submitBountyItem();
           }
-        } catch (error) {
+        } catch {
           setValidationResult({
             valid: false,
             explanation: 'Failed to validate video. Please try again.'

@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@clerk/nextjs/server';
 import { supabaseAdmin } from '@/lib/supabase-server';
 
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
     const { userId } = await auth();
 
@@ -38,7 +38,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Transform database format to frontend format
-    const formattedSubmissions = submissions.map((submission: any) => ({
+    const formattedSubmissions = submissions.map((submission) => ({
       id: submission.id,
       url: submission.video_url,
       bountyId: submission.bounty_id,

@@ -144,7 +144,7 @@ export default function ProfilePage() {
         {submissions.length === 0 ? (
           <div className="bg-white border border-gray-300 p-12 text-center">
             <p className="text-gray-600 text-lg mb-4">
-              You haven't made any submissions yet.
+              You haven&apos;t made any submissions yet.
             </p>
             <Link 
               href="/"
