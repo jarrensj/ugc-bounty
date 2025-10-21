@@ -1,6 +1,19 @@
 ## ugc bounty
 
-Brands / Parties can submit bounties (deposit a sum of money and the rate per 1k views). Anyone (users) can submit content (tiktok, youtube, twitter) and get part of the bounty. Our app checks using AI if the content actually includes the campaign requirements (example campaign: make a video wearing this sushi hat) and check if the hat is in the video. We also check the views of the content. 
+A platform connecting brands with content creators through bounty-based campaigns.
+
+**How it works:**
+- **Brands** create bounties by depositing funds and setting a rate per 1,000 views
+- **Creators** submit content (TikTok, YouTube, Twitter) to fulfill campaign requirements
+- **AI validation** automatically verifies that submissions meet campaign criteria (e.g., checking if a product appears in the video)
+- **View tracking** monitors content performance and calculates payouts accordingly
+
+**User Management:**
+- Integrated with **Clerk** for secure authentication and user management
+- **User profiles** display:
+  - Bounties/campaigns you've created
+  - Submissions you've made to other bounties
+  - Track your earnings and campaign performance 
 
 ## Getting Started
 
