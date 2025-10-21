@@ -5,6 +5,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import BountyCard from "./components/BountyCard";
 import ClaimBountyDialog from "./components/ClaimBountyDialog";
+import Header from "./components/Header";
 import { useUser } from "@clerk/nextjs";
 
 interface BountyWithCreator {
@@ -73,7 +74,9 @@ export default function Home() {
   };
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen bg-[#F5F1E8]">
+      <Header />
+
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-12">
         {isLoading ? (
