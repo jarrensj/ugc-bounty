@@ -43,20 +43,20 @@ export default function BountyDetailPage({
           {/* Hero Section */}
           <div className="border-b border-gray-300">
             <div className="grid grid-cols-1 md:grid-cols-4 gap-6 items-start">
-              <div className="md:col-span-3 p-6">
-                <h2 className="text-3xl font-bold mb-2 text-black">
-                  {bounty.name}
-                </h2>
-                <p className="text-gray-700 text-lg">{bounty.description}</p>
-              </div>
               <div
-                className="flex flex-col justify-center items-center bg-black p-6 md:h-full md:row-span-full md:self-stretch"
+                className="flex flex-col justify-center items-center bg-black p-6 md:h-full md:row-span-full md:self-stretch order-1 md:order-1"
                 style={{ minHeight: "100%" }}
               >
                 <span className="text-sm text-white">Total Bounty</span>
                 <span className="text-4xl font-bold text-white">
                   ${bounty.totalBounty.toLocaleString()}
                 </span>
+              </div>
+              <div className="md:col-span-3 p-6 order-2 md:order-2">
+                <h2 className="text-3xl font-bold mb-2 text-black">
+                  {bounty.name}
+                </h2>
+                <p className="text-gray-700 text-lg">{bounty.description}</p>
               </div>
             </div>
           </div>
@@ -143,40 +143,42 @@ export default function BountyDetailPage({
 
             {/* How It Works Section */}
             <div className="mb-8">
-              <h3 className="text-2xl font-bold text-black mb-4">
+              <h3 className="text-2xl font-bold text-black mb-12">
                 How It Works
               </h3>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div className="text-center">
-                  <div className="border-2 border-black w-16 h-16 flex items-center justify-center mx-auto mb-3">
-                    <span className="text-2xl font-bold text-black">1</span>
+              <div className="space-y-8">
+                <div className="flex items-start gap-4">
+                  <span className="text-6xl font-bold text-black">1</span>
+                  <div>
+                    <h4 className="font-semibold text-black mb-2 text-lg">
+                      Create Content
+                    </h4>
+                    <p className="text-gray-700">
+                      Make engaging content featuring the product
+                    </p>
                   </div>
-                  <h4 className="font-semibold text-black mb-2">
-                    Create Content
-                  </h4>
-                  <p className="text-sm text-gray-700">
-                    Make engaging content featuring the product
-                  </p>
                 </div>
-                <div className="text-center">
-                  <div className="border-2 border-black w-16 h-16 flex items-center justify-center mx-auto mb-3">
-                    <span className="text-2xl font-bold text-black">2</span>
+                <div className="flex items-start gap-4">
+                  <span className="text-6xl font-bold text-black">2</span>
+                  <div>
+                    <h4 className="font-semibold text-black mb-2 text-lg">
+                      Submit & Track
+                    </h4>
+                    <p className="text-gray-700">
+                      Submit your URL and we&apos;ll track your views
+                    </p>
                   </div>
-                  <h4 className="font-semibold text-black mb-2">
-                    Submit & Track
-                  </h4>
-                  <p className="text-sm text-gray-700">
-                    Submit your URL and we&apos;ll track your views
-                  </p>
                 </div>
-                <div className="text-center">
-                  <div className="border-2 border-black w-16 h-16 flex items-center justify-center mx-auto mb-3">
-                    <span className="text-2xl font-bold text-black">3</span>
+                <div className="flex items-start gap-4">
+                  <span className="text-6xl font-bold text-black">3</span>
+                  <div>
+                    <h4 className="font-semibold text-black mb-2 text-lg">
+                      Get Paid
+                    </h4>
+                    <p className="text-gray-700">
+                      Earn money based on your view count
+                    </p>
                   </div>
-                  <h4 className="font-semibold text-black mb-2">Get Paid</h4>
-                  <p className="text-sm text-gray-700">
-                    Earn money based on your view count
-                  </p>
                 </div>
               </div>
             </div>
