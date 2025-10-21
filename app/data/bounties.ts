@@ -4,7 +4,10 @@ export interface Bounty {
   totalBounty: number;
   ratePer1kViews: number;
   description: string;
-  claimedBounty: number; // Amount of bounty claimed so far
+  claimedBounty: number; // Amount of bounty claimed so far (calculated from submissions)
+  progressPercentage?: number; // Calculated progress percentage
+  totalSubmissionViews?: number; // Total views from approved submissions
+  isCompleted?: boolean; // Whether the bounty is completed (views exceed total)
   submittedBy?: {
     userId: string;
     username?: string;

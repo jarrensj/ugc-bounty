@@ -16,6 +16,10 @@ interface BountyWithCreator {
   rate_per_1k_views: number;
   claimed_bounty: number;
   creator_id: string | null;
+  calculated_claimed_bounty: number;
+  progress_percentage: number;
+  total_submission_views: number;
+  is_completed: boolean;
 }
 
 export default function Home() {
@@ -49,13 +53,20 @@ export default function Home() {
             rate_per_1k_views: number;
             claimed_bounty: number;
             creator_id: string | null;
+            calculated_claimed_bounty: number;
+            progress_percentage: number;
+            total_submission_views: number;
+            is_completed: boolean;
           }) => ({
             id: bounty.id,
             name: bounty.name,
             description: bounty.description,
             totalBounty: bounty.total_bounty,
             ratePer1kViews: bounty.rate_per_1k_views,
-            claimedBounty: bounty.claimed_bounty,
+            claimedBounty: bounty.calculated_claimed_bounty, // Use calculated bounty instead of static claimed_bounty
+            progressPercentage: bounty.progress_percentage,
+            totalSubmissionViews: bounty.total_submission_views,
+            isCompleted: bounty.is_completed,
           })
         );
         setBounties(mappedBounties);
@@ -123,6 +134,7 @@ export default function Home() {
           bounty={bounties.find((b) => b.id === selectedBounty)!}
           isOpen={!!selectedBounty}
           onClose={() => setSelectedBounty(null)}
+          isCompleted={bounties.find((b) => b.id === selectedBounty)?.isCompleted}
         />
       )}
     </div>
