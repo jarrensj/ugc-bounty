@@ -71,6 +71,11 @@ export interface BountyItemData {
   viewCount?: number;
   platform: 'youtube' | 'tiktok' | 'instagram' | 'other';
   createdAt: string;
+  submittedBy?: {
+    userId: string;
+    username?: string;
+    email?: string;
+  };
 }
 
 export interface SubmitBountyItemResponse {

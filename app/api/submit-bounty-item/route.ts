@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { auth, currentUser } from '@clerk/nextjs/server';
 import type {
   SubmitBountyItemRequest,
   SubmitBountyItemResponse,
@@ -46,6 +47,17 @@ export async function POST(
   request: NextRequest
 ): Promise<NextResponse<SubmitBountyItemResponse>> {
   try {
+    // Get the authenticated user
+    const { userId } = await auth();
+    const user = await currentUser();
+
+    if (!userId) {
+      return NextResponse.json(
+        { success: false, error: 'Unauthorized: You must be signed in to submit a bounty item' },
+        { status: 401 }
+      );
+    }
+
     const peekalinkApiKey = process.env.PEEKALINK_API_KEY;
     if (!peekalinkApiKey) {
       return NextResponse.json(
@@ -115,6 +127,11 @@ export async function POST(
       viewCount,
       platform,
       createdAt: new Date().toISOString(),
+      submittedBy: {
+        userId,
+        username: user?.username || undefined,
+        email: user?.emailAddresses[0]?.emailAddress || undefined,
+      },
     };
 
     return NextResponse.json({
