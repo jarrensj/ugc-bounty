@@ -4,6 +4,7 @@ import { bounties as initialBounties, Bounty } from "./data/bounties";
 import { useState } from "react";
 import Link from "next/link";
 import BountyCard from "./components/BountyCard";
+import ClaimBountyDialog from "./components/ClaimBountyDialog";
 import { SignInButton, SignUpButton } from "@clerk/nextjs";
 
 export default function Home() {
