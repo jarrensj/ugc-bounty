@@ -210,7 +210,7 @@ export default function BountyDetailPage({ params }: { params: { id: string } })
               onClick={() => setShowModal(true)}
               className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white font-bold py-4 px-8 rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all duration-200 text-lg shadow-lg hover:shadow-xl"
             >
-              Claim This Bounty
+              Submit your content to participate in this bounty
             </button>
           </div>
         </div>
