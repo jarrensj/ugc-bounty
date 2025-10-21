@@ -12,13 +12,13 @@ interface Submission {
   video_url: string;
   view_count: number;
   earned_amount: number;
-  status: 'pending' | 'approved' | 'rejected';
+  status: "pending" | "approved" | "rejected";
   validation_explanation: string | null;
   title: string | null;
   description: string | null;
   cover_image_url: string | null;
   author: string | null;
-  platform: 'youtube' | 'tiktok' | 'instagram' | 'other' | null;
+  platform: "youtube" | "tiktok" | "instagram" | "other" | null;
   created_at: string;
   updated_at: string;
   user_profiles: {
@@ -56,7 +56,9 @@ export default function BountyDetailPage({
         const response = await fetch("/api/bounties");
         if (response.ok) {
           const data = await response.json();
-          const foundBounty = data.find((b: { id: number; creator_id?: string | null }) => b.id === bountyId);
+          const foundBounty = data.find(
+            (b: { id: number; creator_id?: string | null }) => b.id === bountyId
+          );
           if (foundBounty) {
             // Map to frontend format
             const mappedBounty = {
@@ -68,7 +70,7 @@ export default function BountyDetailPage({
               claimedBounty: foundBounty.claimed_bounty,
             };
             setBounty(mappedBounty);
-            
+
             // Check if user is owner
             if (user && foundBounty.creator_id === user.id) {
               setIsOwner(true);
@@ -94,7 +96,7 @@ export default function BountyDetailPage({
           setSubmissions(data);
         }
       } catch (error) {
-        console.error('Error fetching submissions:', error);
+        console.error("Error fetching submissions:", error);
       }
     };
 
@@ -127,7 +129,7 @@ export default function BountyDetailPage({
   }
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen bg-[#F5F1E8]">
       {/* Main Content */}
       <main className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <Link href="/" className="text-black hover:underline mb-6 inline-block">
@@ -299,87 +301,95 @@ export default function BountyDetailPage({
           <h3 className="text-2xl font-bold text-black mb-6">
             Submissions ({submissions.length})
           </h3>
-          
+
           {isLoading ? (
             <div className="text-center py-8">
               <p className="text-gray-600">Loading submissions...</p>
             </div>
           ) : submissions.length === 0 ? (
             <div className="text-center py-8 border border-gray-300">
-              <p className="text-gray-600">No submissions yet. Be the first to submit!</p>
+              <p className="text-gray-600">
+                No submissions yet. Be the first to submit!
+              </p>
             </div>
           ) : (
-            <div className="space-y-4">
-              {submissions.map((submission) => (
-                <div key={submission.id} className="border border-gray-300 p-6">
-                  <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-3 mb-2">
-                        <span className={`px-3 py-1 text-sm font-medium rounded-full ${
-                          submission.status === 'approved' ? 'bg-green-100 text-green-800' :
-                          submission.status === 'rejected' ? 'bg-red-100 text-red-800' :
-                          'bg-yellow-100 text-yellow-800'
-                        }`}>
-                          {submission.status.charAt(0).toUpperCase() + submission.status.slice(1)}
-                        </span>
-                        <span className="text-sm text-gray-600">
-                          {new Date(submission.created_at).toLocaleDateString()}
-                        </span>
+            <div>
+              {submissions.map((submission, index) => (
+                <div
+                  key={submission.id}
+                  className={`border border-gray-300 p-6 ${
+                    index > 0 ? "-mt-px" : ""
+                  }`}
+                >
+                  <div className="flex gap-4">
+                    {/* Thumbnail */}
+                    {submission.cover_image_url && (
+                      <div className="flex-shrink-0">
+                        <img
+                          src={submission.cover_image_url}
+                          alt={submission.title || "Video thumbnail"}
+                          className="w-32 h-24 object-cover border border-gray-300"
+                          onError={(e) => {
+                            e.currentTarget.style.display = "none";
+                          }}
+                        />
                       </div>
-                      
-                      {/* Preview Card */}
-                      <div className="bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-4 mb-3">
-                        <div className="flex gap-4">
-                          {submission.cover_image_url && (
-                            <div className="flex-shrink-0 relative w-20 h-20">
-                              <img
-                                src={submission.cover_image_url}
-                                alt={submission.title || 'Preview'}
-                                className="w-full h-full object-cover rounded-lg"
-                                onError={(e) => {
-                                  e.currentTarget.style.display = 'none';
-                                }}
-                              />
-                            </div>
-                          )}
-                          <div className="flex-1 min-w-0">
-                            <h4 className="font-semibold text-slate-900 dark:text-slate-100 text-sm line-clamp-2">
-                              {submission.title || 'No title available'}
-                            </h4>
-                            {submission.description && (
-                              <p className="text-slate-600 dark:text-slate-400 text-xs mt-1 line-clamp-2">
-                                {submission.description}
-                              </p>
-                            )}
-                            <a 
-                              href={submission.video_url} 
-                              target="_blank" 
-                              rel="noopener noreferrer"
-                              className="text-blue-600 hover:underline text-xs mt-2 truncate block"
-                            >
-                              {submission.video_url}
-                            </a>
-                          </div>
+                    )}
+
+                    {/* Content */}
+                    <div className="flex-1 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-3 mb-2">
+                          <span
+                            className={`px-3 py-1 text-sm font-medium ${
+                              submission.status === "approved"
+                                ? "text-black border border-black"
+                                : submission.status === "rejected"
+                                ? "bg-black text-white"
+                                : "bg-gray-200 text-black"
+                            }`}
+                          >
+                            {submission.status.charAt(0).toUpperCase() +
+                              submission.status.slice(1)}
+                          </span>
+                          <span className="text-sm text-gray-700">
+                            {new Date(
+                              submission.created_at
+                            ).toLocaleDateString()}
+                          </span>
                         </div>
+
+                        <a
+                          href={submission.video_url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-black hover:underline font-medium mb-2 block"
+                        >
+                          {submission.title || submission.video_url}
+                        </a>
+
+                        <p className="text-sm text-gray-700">
+                          Submitted by:{" "}
+                          {submission.user_profiles?.username ||
+                            submission.user_profiles?.email ||
+                            "Anonymous"}
+                        </p>
                       </div>
-                      
-                      <p className="text-sm text-gray-600 mt-1">
-                        Submitted by: {submission.user_profiles?.username || submission.user_profiles?.email || 'Anonymous'}
-                      </p>
-                    </div>
-                    <div className="text-right">
-                      <div className="text-lg font-semibold text-black">
-                        {submission.view_count.toLocaleString()} views
-                      </div>
-                      <div className="text-sm text-gray-600">
-                        ${submission.earned_amount.toFixed(2)} earned
+                      <div className="text-right">
+                        <div className="text-lg font-semibold text-black">
+                          {submission.view_count.toLocaleString()} views
+                        </div>
+                        <div className="text-sm text-gray-600">
+                          ${submission.earned_amount.toFixed(2)} earned
+                        </div>
                       </div>
                     </div>
                   </div>
                   {submission.validation_explanation && (
-                    <div className="mt-3 p-3 bg-gray-50 rounded">
-                      <p className="text-sm text-gray-700">
-                        <strong>Note:</strong> {submission.validation_explanation}
+                    <div className="mt-3 p-3 border border-gray-300 bg-white">
+                      <p className="text-sm text-black">
+                        <strong>Note:</strong>{" "}
+                        {submission.validation_explanation}
                       </p>
                     </div>
                   )}
