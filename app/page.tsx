@@ -10,10 +10,13 @@ export default function Home() {
   const [selectedBounty, setSelectedBounty] = useState<number | null>(null);
   const [url, setUrl] = useState("");
   const [isValidating, setIsValidating] = useState(false);
-  const [validationResult, setValidationResult] = useState<{valid: boolean; explanation: string} | null>(null);
+  const [validationResult, setValidationResult] = useState<{
+    valid: boolean;
+    explanation: string;
+  } | null>(null);
   const [urlError, setUrlError] = useState<string | null>(null);
   const [showCreateModal, setShowCreateModal] = useState(false);
-  
+
   // Create bounty form state
   const [bountyName, setBountyName] = useState("");
   const [bountyDescription, setBountyDescription] = useState("");
@@ -24,10 +27,12 @@ export default function Home() {
     try {
       const urlObj = new URL(url);
       const hostname = urlObj.hostname.toLowerCase();
-      return hostname.includes('youtube.com') || 
-             hostname.includes('youtu.be') || 
-             hostname.includes('instagram.com') || 
-             hostname.includes('tiktok.com');
+      return (
+        hostname.includes("youtube.com") ||
+        hostname.includes("youtu.be") ||
+        hostname.includes("instagram.com") ||
+        hostname.includes("tiktok.com")
+      );
     } catch {
       return false;
     }
@@ -37,21 +42,22 @@ export default function Home() {
     try {
       const urlObj = new URL(url);
       const hostname = urlObj.hostname.toLowerCase();
-      if (hostname.includes('youtube.com') || hostname.includes('youtu.be')) return 'youtube';
-      if (hostname.includes('instagram.com')) return 'instagram';
-      if (hostname.includes('tiktok.com')) return 'tiktok';
-      return 'unknown';
+      if (hostname.includes("youtube.com") || hostname.includes("youtu.be"))
+        return "youtube";
+      if (hostname.includes("instagram.com")) return "instagram";
+      if (hostname.includes("tiktok.com")) return "tiktok";
+      return "unknown";
     } catch {
-      return 'unknown';
+      return "unknown";
     }
   };
 
   const handleUrlChange = (newUrl: string) => {
     setUrl(newUrl);
     setUrlError(null);
-    
+
     if (newUrl && !isValidSupportedUrl(newUrl)) {
-      setUrlError('URL must be from YouTube, Instagram, or TikTok');
+      setUrlError("URL must be from YouTube, Instagram, or TikTok");
     }
   };
 
@@ -67,20 +73,20 @@ export default function Home() {
     const bounty = bounties.find((b) => b.id === selectedBounty);
     if (bounty && url && isValidSupportedUrl(url)) {
       const platform = getPlatformFromUrl(url);
-      
+
       if (platform === "youtube") {
         setIsValidating(true);
         setValidationResult(null);
-        
+
         try {
-          const response = await fetch('/api/validate-bounty', {
-            method: 'POST',
+          const response = await fetch("/api/validate-bounty", {
+            method: "POST",
             headers: {
-              'Content-Type': 'application/json',
+              "Content-Type": "application/json",
             },
             body: JSON.stringify({
               url: url,
-              requirements: bounty.description
+              requirements: bounty.description,
             }),
           });
 
@@ -89,14 +95,16 @@ export default function Home() {
         } catch (error) {
           setValidationResult({
             valid: false,
-            explanation: 'Failed to validate video. Please try again.'
+            explanation: "Failed to validate video. Please try again.",
           });
         } finally {
           setIsValidating(false);
         }
       } else {
         // For Instagram and TikTok, show success message directly
-        alert(`Submitted!\nBounty: ${bounty.name}\nPlatform: ${platform}\nURL: ${url}`);
+        alert(
+          `Submitted!\nBounty: ${bounty.name}\nPlatform: ${platform}\nURL: ${url}`
+        );
         setSelectedBounty(null);
         setUrl("");
       }
@@ -121,16 +129,16 @@ export default function Home() {
     if (bountyName && bountyDescription && totalBounty && ratePer1k) {
       // TODO: Save to Supabase
       const newBounty: Bounty = {
-        id: Math.max(...bounties.map(b => b.id)) + 1,
+        id: Math.max(...bounties.map((b) => b.id)) + 1,
         name: bountyName,
         description: bountyDescription,
         totalBounty: parseFloat(totalBounty),
         ratePer1kViews: parseFloat(ratePer1k),
         claimedBounty: 0,
       };
-      
+
       setBounties([newBounty, ...bounties]);
-      
+
       // Reset form
       setBountyName("");
       setBountyDescription("");
@@ -223,16 +231,21 @@ export default function Home() {
                   placeholder="https://youtube.com/watch?v=... or https://instagram.com/... or https://tiktok.com/..."
                   className={`w-full px-4 py-2 rounded-lg border ${
                     urlError
-                      ? 'border-red-300 dark:border-red-700 focus:ring-2 focus:ring-red-500'
-                      : 'border-slate-300 dark:border-slate-700 focus:ring-2 focus:ring-blue-500'
+                      ? "border-red-300 dark:border-red-700 focus:ring-2 focus:ring-red-500"
+                      : "border-slate-300 dark:border-slate-700 focus:ring-2 focus:ring-blue-500"
                   } focus:border-transparent bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 placeholder-slate-400`}
                 />
                 {urlError && (
-                  <p className="mt-2 text-sm text-red-600 dark:text-red-400">{urlError}</p>
+                  <p className="mt-2 text-sm text-red-600 dark:text-red-400">
+                    {urlError}
+                  </p>
                 )}
                 {url && !urlError && isValidSupportedUrl(url) && (
                   <p className="mt-2 text-sm text-emerald-600 dark:text-emerald-400">
-                    ✓ {getPlatformFromUrl(url).charAt(0).toUpperCase() + getPlatformFromUrl(url).slice(1)} URL detected
+                    ✓{" "}
+                    {getPlatformFromUrl(url).charAt(0).toUpperCase() +
+                      getPlatformFromUrl(url).slice(1)}{" "}
+                    URL detected
                   </p>
                 )}
               </div>
@@ -250,41 +263,66 @@ export default function Home() {
               )}
 
               {validationResult && (
-                <div className={`border rounded-lg p-4 ${
-                  validationResult.valid
-                    ? 'bg-emerald-50 dark:bg-emerald-950 border-emerald-200 dark:border-emerald-800'
-                    : 'bg-red-50 dark:bg-red-950 border-red-200 dark:border-red-800'
-                }`}>
+                <div
+                  className={`border rounded-lg p-4 ${
+                    validationResult.valid
+                      ? "bg-emerald-50 dark:bg-emerald-950 border-emerald-200 dark:border-emerald-800"
+                      : "bg-red-50 dark:bg-red-950 border-red-200 dark:border-red-800"
+                  }`}
+                >
                   <div className="flex items-start space-x-3">
-                    <div className={`flex-shrink-0 w-6 h-6 rounded-full flex items-center justify-center ${
-                      validationResult.valid ? 'bg-emerald-100 dark:bg-emerald-900' : 'bg-red-100 dark:bg-red-900'
-                    }`}>
+                    <div
+                      className={`flex-shrink-0 w-6 h-6 rounded-full flex items-center justify-center ${
+                        validationResult.valid
+                          ? "bg-emerald-100 dark:bg-emerald-900"
+                          : "bg-red-100 dark:bg-red-900"
+                      }`}
+                    >
                       {validationResult.valid ? (
-                        <svg className="w-4 h-4 text-emerald-600 dark:text-emerald-400" fill="currentColor" viewBox="0 0 20 20">
-                          <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                        <svg
+                          className="w-4 h-4 text-emerald-600 dark:text-emerald-400"
+                          fill="currentColor"
+                          viewBox="0 0 20 20"
+                        >
+                          <path
+                            fillRule="evenodd"
+                            d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                            clipRule="evenodd"
+                          />
                         </svg>
                       ) : (
-                        <svg className="w-4 h-4 text-red-600 dark:text-red-400" fill="currentColor" viewBox="0 0 20 20">
-                          <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+                        <svg
+                          className="w-4 h-4 text-red-600 dark:text-red-400"
+                          fill="currentColor"
+                          viewBox="0 0 20 20"
+                        >
+                          <path
+                            fillRule="evenodd"
+                            d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+                            clipRule="evenodd"
+                          />
                         </svg>
                       )}
                     </div>
                     <div>
-                      <p className={`font-medium ${
-                        validationResult.valid
-                          ? 'text-emerald-800 dark:text-emerald-200'
-                          : 'text-red-800 dark:text-red-200'
-                      }`}>
+                      <p
+                        className={`font-medium ${
+                          validationResult.valid
+                            ? "text-emerald-800 dark:text-emerald-200"
+                            : "text-red-800 dark:text-red-200"
+                        }`}
+                      >
                         {validationResult.valid
-                          ? '🎉 Your video is now part of the bounty!'
-                          : '❌ Video does not meet requirements'
-                        }
+                          ? "🎉 Your video is now part of the bounty!"
+                          : "❌ Video does not meet requirements"}
                       </p>
-                      <p className={`text-sm mt-1 ${
-                        validationResult.valid
-                          ? 'text-emerald-700 dark:text-emerald-300'
-                          : 'text-red-700 dark:text-red-300'
-                      }`}>
+                      <p
+                        className={`text-sm mt-1 ${
+                          validationResult.valid
+                            ? "text-emerald-700 dark:text-emerald-300"
+                            : "text-red-700 dark:text-red-300"
+                        }`}
+                      >
                         {validationResult.explanation}
                       </p>
                       {validationResult.valid && (
@@ -319,7 +357,7 @@ export default function Home() {
                     disabled={!url || isValidating || !isValidSupportedUrl(url)}
                     className="flex-1 bg-emerald-600 dark:bg-emerald-500 text-white font-semibold py-3 px-6 rounded-lg hover:bg-emerald-700 dark:hover:bg-emerald-600 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    {isValidating ? 'Validating...' : 'Submit'}
+                    {isValidating ? "Validating..." : "Submit"}
                   </button>
                 </div>
               )}
@@ -408,7 +446,12 @@ export default function Home() {
               <div className="pt-2">
                 <button
                   onClick={handleCreateBounty}
-                  disabled={!bountyName || !bountyDescription || !totalBounty || !ratePer1k}
+                  disabled={
+                    !bountyName ||
+                    !bountyDescription ||
+                    !totalBounty ||
+                    !ratePer1k
+                  }
                   className="w-full bg-blue-600 dark:bg-blue-500 text-white font-semibold py-3 px-6 rounded-lg hover:bg-blue-700 dark:hover:bg-blue-600 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   Create Bounty
