@@ -75,6 +75,8 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     const urls = youtubeItems.map(item => item.url);
 
     // Call the YouTube views endpoint
+    console.log(`[Update YouTube Views] Calling YouTube API for ${urls.length} URLs:`, urls);
+    
     const youtubeResponse = await fetch(`${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/youtube-views`, {
       method: 'POST',
       headers: {
@@ -83,11 +85,16 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       body: JSON.stringify({ urls }),
     });
 
+    console.log(`[Update YouTube Views] YouTube API response status: ${youtubeResponse.status}`);
+
     if (!youtubeResponse.ok) {
+      const errorText = await youtubeResponse.text();
+      console.error(`[Update YouTube Views] YouTube API error:`, errorText);
       throw new Error(`YouTube views API returned ${youtubeResponse.status}`);
     }
 
     const youtubeData: YouTubeViewsResponse = await youtubeResponse.json();
+    console.log(`[Update YouTube Views] YouTube API response data:`, JSON.stringify(youtubeData, null, 2));
     
     let updatedCount = 0;
     let failedCount = 0;

@@ -46,6 +46,11 @@ export interface Database {
           earned_amount: number;
           status: 'pending' | 'approved' | 'rejected';
           validation_explanation: string | null;
+          title: string | null;
+          description: string | null;
+          cover_image_url: string | null;
+          author: string | null;
+          platform: 'youtube' | 'tiktok' | 'instagram' | 'other' | null;
           created_at: string;
           updated_at: string;
         };
@@ -58,6 +63,11 @@ export interface Database {
           earned_amount?: number;
           status?: 'pending' | 'approved' | 'rejected';
           validation_explanation?: string | null;
+          title?: string | null;
+          description?: string | null;
+          cover_image_url?: string | null;
+          author?: string | null;
+          platform?: 'youtube' | 'tiktok' | 'instagram' | 'other' | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -70,6 +80,11 @@ export interface Database {
           earned_amount?: number;
           status?: 'pending' | 'approved' | 'rejected';
           validation_explanation?: string | null;
+          title?: string | null;
+          description?: string | null;
+          cover_image_url?: string | null;
+          author?: string | null;
+          platform?: 'youtube' | 'tiktok' | 'instagram' | 'other' | null;
           created_at?: string;
           updated_at?: string;
         };

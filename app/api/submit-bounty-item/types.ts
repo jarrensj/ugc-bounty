@@ -3,42 +3,6 @@ export interface SubmitBountyItemRequest {
   bountyId: number;
 }
 
-export interface PeekalinkImage {
-  thumbnail: ImageSize;
-  medium: ImageSize;
-  large: ImageSize;
-  original: ImageSize;
-}
-
-export interface ImageSize {
-  width: number;
-  height: number;
-  url: string;
-}
-
-export interface TikTokVideo {
-  id: string;
-  title?: string;
-  description?: string;
-  [key: string]: unknown;
-}
-
-export interface PeekalinkResponse {
-  id: number;
-  ok: boolean;
-  url: string;
-  domain: string;
-  type: string;
-  status: number;
-  updatedAt: string;
-  size: number;
-  redirected: boolean;
-  title: string;
-  description: string;
-  image: PeekalinkImage;
-  tiktokVideo?: TikTokVideo;
-  requestId: string;
-}
 
 export interface YouTubeVideoSnippet {
   title: string;
@@ -73,6 +37,7 @@ export interface BountyItemData {
   url: string;
   bountyId: number;
   title: string;
+  description: string;
   coverImage: string;
   author?: string;
   viewCount?: number;
