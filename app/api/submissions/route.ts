@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase-server';
 import { auth } from '@clerk/nextjs/server';
@@ -67,8 +68,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { data, error } = await supabaseAdmin
-      .from('submissions')
+    const { data, error } = await (supabaseAdmin.from('submissions') as any)
       .insert({
         bounty_id,
         user_id: userId,
