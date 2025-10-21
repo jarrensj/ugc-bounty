@@ -1,6 +1,5 @@
 "use client";
 
-import { bounties } from "@/app/data/bounties";
 import { useState, use, useEffect } from "react";
 import Link from "next/link";
 import ClaimBountyDialog from "@/app/components/ClaimBountyDialog";
@@ -20,16 +19,42 @@ interface BountyItem {
   created_at: string;
 }
 
+interface Bounty {
+  id: number;
+  name: string;
+  total_bounty: number;
+  rate_per_1k_views: number;
+  description: string;
+  claimed_bounty: number;
+  created_at: string;
+  updated_at: string;
+}
+
 export default function BountyDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
   const bountyId = parseInt(id);
-  const bounty = bounties.find((b) => b.id === bountyId);
 
+  const [bounty, setBounty] = useState<Bounty | null>(null);
+  const [isLoadingBounty, setIsLoadingBounty] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [bountyItems, setBountyItems] = useState<BountyItem[]>([]);
   const [isLoadingItems, setIsLoadingItems] = useState(true);
 
   useEffect(() => {
+    const fetchBounty = async () => {
+      try {
+        const response = await fetch(`/api/bounties/${bountyId}`);
+        if (response.ok) {
+          const data = await response.json();
+          setBounty(data);
+        }
+      } catch (error) {
+        console.error('Error fetching bounty:', error);
+      } finally {
+        setIsLoadingBounty(false);
+      }
+    };
+
     const fetchBountyItems = async () => {
       try {
         const response = await fetch(`/api/bounty-items?bountyId=${bountyId}`);
@@ -44,8 +69,17 @@ export default function BountyDetailPage({ params }: { params: Promise<{ id: str
       }
     };
 
+    fetchBounty();
     fetchBountyItems();
   }, [bountyId]);
+
+  if (isLoadingBounty) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-950 dark:to-slate-900 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      </div>
+    );
+  }
 
   if (!bounty) {
     return (
@@ -97,7 +131,7 @@ export default function BountyDetailPage({ params }: { params: Promise<{ id: str
               <div className="flex flex-col items-start md:items-end gap-2">
                 <div className="bg-white/20 backdrop-blur-sm rounded-lg px-6 py-3">
                   <span className="text-sm opacity-90 block">Total Bounty</span>
-                  <span className="text-4xl font-bold">${bounty.totalBounty.toLocaleString()}</span>
+                  <span className="text-4xl font-bold">${bounty.total_bounty.toLocaleString()}</span>
                 </div>
               </div>
             </div>
@@ -112,7 +146,7 @@ export default function BountyDetailPage({ params }: { params: Promise<{ id: str
                   Earning Rate
                 </h3>
                 <p className="text-3xl font-bold text-blue-600 dark:text-blue-400">
-                  ${bounty.ratePer1kViews} per 1,000 views
+                  ${bounty.rate_per_1k_views} per 1,000 views
                 </p>
                 <p className="text-sm text-slate-600 dark:text-slate-400 mt-2">
                   Get paid for every thousand views your content receives
@@ -128,19 +162,19 @@ export default function BountyDetailPage({ params }: { params: Promise<{ id: str
                   <div className="flex justify-between">
                     <span className="text-slate-600 dark:text-slate-400">10k views:</span>
                     <span className="font-semibold text-slate-900 dark:text-slate-100">
-                      ${(10 * bounty.ratePer1kViews).toFixed(2)}
+                      ${(10 * bounty.rate_per_1k_views).toFixed(2)}
                     </span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-slate-600 dark:text-slate-400">50k views:</span>
                     <span className="font-semibold text-slate-900 dark:text-slate-100">
-                      ${(50 * bounty.ratePer1kViews).toFixed(2)}
+                      ${(50 * bounty.rate_per_1k_views).toFixed(2)}
                     </span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-slate-600 dark:text-slate-400">100k views:</span>
                     <span className="font-semibold text-emerald-600 dark:text-emerald-400 font-bold">
-                      ${(100 * bounty.ratePer1kViews).toFixed(2)}
+                      ${(100 * bounty.rate_per_1k_views).toFixed(2)}
                     </span>
                   </div>
                 </div>

@@ -1,8 +1,18 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { Bounty } from "@/app/data/bounties";
 import Image from "next/image";
+
+interface Bounty {
+  id: number;
+  name: string;
+  total_bounty: number;
+  rate_per_1k_views: number;
+  description: string;
+  claimed_bounty: number;
+  created_at: string;
+  updated_at: string;
+}
 
 interface ClaimBountyDialogProps {
   bounty: Bounty;
