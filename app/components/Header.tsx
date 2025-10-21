@@ -71,7 +71,7 @@ export default function Header() {
           <div className="flex justify-between items-stretch">
             <Link href="/" className="py-6">
               <h1 className="text-4xl font-bold text-black font-[family-name:var(--font-dancing-script)]">
-                Django
+                Django (UGC Bounty)
               </h1>
               <p className="mt-2 text-gray-700">
                 Browse available bounties and start earning today
