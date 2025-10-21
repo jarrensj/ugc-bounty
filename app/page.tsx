@@ -1,7 +1,7 @@
 import { UserButton } from '@clerk/nextjs';
-import { useSupabaseClient } from '@/lib/supabase/client';
+import { useSupabaseClient } from '../lib/supabase/client';
 import { useEffect, useState } from 'react';
-import type { Database } from '@/lib/database.types';
+import type { Database } from '../lib/database.types';
 
 type Profile = Database['public']['Tables']['profiles']['Row'];
 type SocialAccount = Database['public']['Tables']['social_accounts']['Row'];
@@ -10,16 +10,18 @@ export default function Home() {
   const supabase = useSupabaseClient();
   const [profile, setProfile] = useState<Profile | null>(null);
   const [socialAccounts, setSocialAccounts] = useState<SocialAccount[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (supabase) {
       // Fetch user profile
-      supabase.from('profiles').select('*').single().then(({ data, error }) => {
+      supabase.from('profiles').select('*').single().then(({ data, error }: { data: Profile | null; error: any }) => {
         if (!error) setProfile(data);
+        setLoading(false);
       });
 
       // Fetch social accounts
-      supabase.from('social_accounts').select('*').then(({ data, error }) => {
+      supabase.from('social_accounts').select('*').then(({ data, error }: { data: SocialAccount[] | null; error: any }) => {
         if (!error) setSocialAccounts(data || []);
       });
     }
@@ -42,13 +44,22 @@ export default function Home() {
             </p>
           </div>
 
-          {profile && (
+          {loading ? (
+            <div className="bg-gray-50 p-4 rounded-lg">
+              <p className="text-gray-600">Loading profile...</p>
+            </div>
+          ) : profile ? (
             <div className="bg-green-50 p-4 rounded-lg">
               <h3 className="text-lg font-semibold text-green-900 mb-2">Your Profile</h3>
               <p className="text-green-800">Username: {profile.username}</p>
               {profile.avatar_url && (
                 <p className="text-green-800">Avatar: {profile.avatar_url}</p>
               )}
+            </div>
+          ) : (
+            <div className="bg-yellow-50 p-4 rounded-lg">
+              <h3 className="text-lg font-semibold text-yellow-900 mb-2">No Profile Found</h3>
+              <p className="text-yellow-800">Create a profile to get started!</p>
             </div>
           )}
 
@@ -65,11 +76,12 @@ export default function Home() {
             </div>
           )}
 
-          <div className="text-sm text-gray-500">
+          <div className="text-sm text-gray-500 space-y-1">
             <p>✅ Clerk authentication integrated</p>
             <p>✅ Supabase database connected</p>
             <p>✅ API routes ready for profiles and social accounts</p>
             <p>✅ Row Level Security policies configured</p>
+            <p>✅ JWT token authentication working</p>
           </div>
         </div>
       </div>

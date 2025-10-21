@@ -1,5 +1,5 @@
 -- UGC Bounty Database Schema
--- This file contains the SQL statements to set up the database schema for the UGC bounty platform
+-- Run this SQL in your Supabase SQL editor
 
 -- Create profiles table
 CREATE TABLE IF NOT EXISTS public.profiles (
@@ -20,7 +20,7 @@ CREATE TABLE IF NOT EXISTS public.social_accounts (
     UNIQUE(user_id, platform)
 );
 
--- Enable Row Level Security on both tables
+-- Enable Row Level Security
 ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.social_accounts ENABLE ROW LEVEL SECURITY;
 
@@ -72,14 +72,3 @@ CREATE POLICY "Users can delete their own social accounts"
 CREATE INDEX IF NOT EXISTS idx_profiles_user_id ON public.profiles(user_id);
 CREATE INDEX IF NOT EXISTS idx_social_accounts_user_id ON public.social_accounts(user_id);
 CREATE INDEX IF NOT EXISTS idx_social_accounts_platform ON public.social_accounts(platform);
-
--- Create a function to automatically create a profile when a user signs up
--- This would typically be triggered by a Clerk webhook
-CREATE OR REPLACE FUNCTION public.handle_new_user()
-RETURNS TRIGGER AS $$
-BEGIN
-    INSERT INTO public.profiles (user_id, username)
-    VALUES (NEW.id, COALESCE(NEW.first_name || ' ' || NEW.last_name, 'User'));
-    RETURN NEW;
-END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
