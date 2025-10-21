@@ -6,7 +6,7 @@ import { useEffect, useState } from 'react';
 
 export function useSupabaseClient() {
   const { session } = useSession();
-  const [supabase, setSupabase] = useState<any>(null);
+  const [supabase, setSupabase] = useState<ReturnType<typeof createClient> | null>(null);
 
   useEffect(() => {
     if (session) {

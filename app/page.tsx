@@ -1,21 +1,20 @@
 "use client";
 
-import { UserButton } from '@clerk/nextjs';
-import { useSupabaseClient } from '../lib/supabase/client';
-import { useEffect, useState } from 'react';
-import type { Database } from '../lib/database.types';
+// import { useSupabaseClient } from '../lib/supabase/client';
+import { useState } from 'react';
+// import type { Database } from '../lib/database.types';
 import { bounties as initialBounties, Bounty } from "./data/bounties";
 import Link from "next/link";
 import BountyCard from "./components/BountyCard";
 
-type Profile = Database['public']['Tables']['profiles']['Row'];
-type SocialAccount = Database['public']['Tables']['social_accounts']['Row'];
+// type Profile = Database['public']['Tables']['profiles']['Row'];
+// type SocialAccount = Database['public']['Tables']['social_accounts']['Row'];
 
 export default function Home() {
-  const supabase = useSupabaseClient();
-  const [profile, setProfile] = useState<Profile | null>(null);
-  const [socialAccounts, setSocialAccounts] = useState<SocialAccount[]>([]);
-  const [loading, setLoading] = useState(true);
+  // const supabase = useSupabaseClient();
+  // const [profile, setProfile] = useState<Profile | null>(null);
+  // const [socialAccounts, setSocialAccounts] = useState<SocialAccount[]>([]);
+  // const [loading, setLoading] = useState(true);
   const [bounties, setBounties] = useState<Bounty[]>(initialBounties);
   const [selectedBounty, setSelectedBounty] = useState<number | null>(null);
   const [url, setUrl] = useState("");
@@ -33,20 +32,20 @@ export default function Home() {
   const [totalBounty, setTotalBounty] = useState("");
   const [ratePer1k, setRatePer1k] = useState("");
 
-  useEffect(() => {
-    if (supabase) {
-      // Fetch user profile
-      supabase.from('profiles').select('*').single().then(({ data, error }: { data: Profile | null; error: any }) => {
-        if (!error) setProfile(data);
-        setLoading(false);
-      });
+  // useEffect(() => {
+  //   if (supabase) {
+  //     // Fetch user profile
+  //     supabase.from('profiles').select('*').single().then(({ data, error }: { data: Profile | null; error: Error | null }) => {
+  //       if (!error) setProfile(data);
+  //       setLoading(false);
+  //     });
 
-      // Fetch social accounts
-      supabase.from('social_accounts').select('*').then(({ data, error }: { data: SocialAccount[] | null; error: any }) => {
-        if (!error) setSocialAccounts(data || []);
-      });
-    }
-  }, [supabase]);
+  //     // Fetch social accounts
+  //     supabase.from('social_accounts').select('*').then(({ data, error }: { data: SocialAccount[] | null; error: Error | null }) => {
+  //       if (!error) setSocialAccounts(data || []);
+  //     });
+  //   }
+  // }, [supabase]);
 
   const isValidSupportedUrl = (url: string): boolean => {
     try {
@@ -117,7 +116,7 @@ export default function Home() {
 
           const result = await response.json();
           setValidationResult(result);
-        } catch (error) {
+        } catch {
           setValidationResult({
             valid: false,
             explanation: "Failed to validate video. Please try again.",
