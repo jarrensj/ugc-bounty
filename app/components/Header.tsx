@@ -1,31 +1,66 @@
 "use client";
 
-import { SignInButton, SignUpButton } from "@clerk/nextjs";
+import { SignInButton, SignUpButton, UserButton, useUser } from "@clerk/nextjs";
 import { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 export default function Header() {
+  const { user, isLoaded } = useUser();
+  const router = useRouter();
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [bountyName, setBountyName] = useState("");
   const [bountyDescription, setBountyDescription] = useState("");
   const [totalBounty, setTotalBounty] = useState("");
   const [ratePer1k, setRatePer1k] = useState("");
+  const [isCreating, setIsCreating] = useState(false);
 
-  const handleCreateBounty = () => {
+  const handleCreateClick = () => {
+    if (!user) {
+      alert("Please sign in to create a bounty");
+      return;
+    }
+    setShowCreateModal(true);
+  };
+
+  const handleCreateBounty = async () => {
     if (bountyName && bountyDescription && totalBounty && ratePer1k) {
-      // TODO: Save to database/state management
-      console.log("Creating bounty:", {
-        name: bountyName,
-        description: bountyDescription,
-        totalBounty: parseFloat(totalBounty),
-        ratePer1kViews: parseFloat(ratePer1k),
-      });
+      try {
+        setIsCreating(true);
 
-      setBountyName("");
-      setBountyDescription("");
-      setTotalBounty("");
-      setRatePer1k("");
-      setShowCreateModal(false);
+        const response = await fetch("/api/bounties", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            name: bountyName,
+            description: bountyDescription,
+            totalBounty: parseFloat(totalBounty),
+            ratePer1kViews: parseFloat(ratePer1k),
+          }),
+        });
+
+        if (response.ok) {
+          // Reset form
+          setBountyName("");
+          setBountyDescription("");
+          setTotalBounty("");
+          setRatePer1k("");
+          setShowCreateModal(false);
+          
+          // Redirect to home page to see the new bounty
+          router.push("/");
+        } else {
+          const error = await response.json();
+          alert(`Failed to create bounty: ${error.error || "Unknown error"}`);
+        }
+      } catch (error) {
+        console.error("Error creating bounty:", error);
+        alert("Failed to create bounty. Please try again.");
+      } finally {
+        setIsCreating(false);
+      }
     }
   };
 
@@ -44,21 +79,37 @@ export default function Header() {
             </Link>
             <div className="flex gap-0">
               <button
-                onClick={() => setShowCreateModal(true)}
+                onClick={handleCreateClick}
                 className="bg-transparent text-black font-semibold px-12 transition-colors duration-200 border-l border-r border-gray-300 hover:border-b-4 hover:border-b-black hover:cursor-pointer -mr-px"
               >
                 Create Bounty
               </button>
-              <SignUpButton mode="modal">
-                <button className="bg-transparent text-black font-semibold px-12 transition-colors duration-200 border-l border-r border-gray-300 hover:border-b-4 hover:border-b-black hover:cursor-pointer -mr-px">
-                  Sign Up
-                </button>
-              </SignUpButton>
-              <SignInButton mode="modal">
-                <button className="bg-transparent text-black font-semibold px-12 transition-colors duration-200 border-l border-r border-gray-300 hover:border-b-4 hover:border-b-black hover:cursor-pointer">
-                  Login
-                </button>
-              </SignInButton>
+              {isLoaded && user ? (
+                <>
+                  <Link
+                    href="/profile"
+                    className="bg-transparent text-black font-semibold px-12 transition-colors duration-200 border-l border-r border-gray-300 hover:border-b-4 hover:border-b-black hover:cursor-pointer -mr-px flex items-center"
+                  >
+                    My Profile
+                  </Link>
+                  <div className="flex items-center px-6 border-r border-gray-300">
+                    <UserButton afterSignOutUrl="/" />
+                  </div>
+                </>
+              ) : (
+                <>
+                  <SignUpButton mode="modal">
+                    <button className="bg-transparent text-black font-semibold px-12 transition-colors duration-200 border-l border-r border-gray-300 hover:border-b-4 hover:border-b-black hover:cursor-pointer -mr-px">
+                      Sign Up
+                    </button>
+                  </SignUpButton>
+                  <SignInButton mode="modal">
+                    <button className="bg-transparent text-black font-semibold px-12 transition-colors duration-200 border-l border-r border-gray-300 hover:border-b-4 hover:border-b-black hover:cursor-pointer">
+                      Login
+                    </button>
+                  </SignInButton>
+                </>
+              )}
             </div>
           </div>
         </div>
@@ -148,11 +199,12 @@ export default function Header() {
                     !bountyName ||
                     !bountyDescription ||
                     !totalBounty ||
-                    !ratePer1k
+                    !ratePer1k ||
+                    isCreating
                   }
                   className="w-full bg-black text-white font-semibold py-3 px-6 hover:bg-gray-800 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  Create Bounty
+                  {isCreating ? "Creating..." : "Create Bounty"}
                 </button>
               </div>
             </div>

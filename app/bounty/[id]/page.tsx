@@ -1,9 +1,9 @@
 "use client";
 
-import { bounties } from "@/app/data/bounties";
-import { useState, use } from "react";
+import { useState, use, useEffect } from "react";
 import Link from "next/link";
 import ClaimBountyDialog from "@/app/components/ClaimBountyDialog";
+import { useUser } from "@clerk/nextjs";
 
 export default function BountyDetailPage({
   params,
@@ -11,10 +11,64 @@ export default function BountyDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = use(params);
+  const { user } = useUser();
   const bountyId = parseInt(id);
-  const bounty = bounties.find((b) => b.id === bountyId);
 
   const [showModal, setShowModal] = useState(false);
+  const [bounty, setBounty] = useState<{
+    id: number;
+    name: string;
+    description: string;
+    totalBounty: number;
+    ratePer1kViews: number;
+    claimedBounty: number;
+  } | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isOwner, setIsOwner] = useState(false);
+
+  useEffect(() => {
+    const fetchBounty = async () => {
+      try {
+        setIsLoading(true);
+        const response = await fetch("/api/bounties");
+        if (response.ok) {
+          const data = await response.json();
+          const foundBounty = data.find((b: { id: number; creator_id?: string | null }) => b.id === bountyId);
+          if (foundBounty) {
+            // Map to frontend format
+            const mappedBounty = {
+              id: foundBounty.id,
+              name: foundBounty.name,
+              description: foundBounty.description,
+              totalBounty: foundBounty.total_bounty,
+              ratePer1kViews: foundBounty.rate_per_1k_views,
+              claimedBounty: foundBounty.claimed_bounty,
+            };
+            setBounty(mappedBounty);
+            
+            // Check if user is owner
+            if (user && foundBounty.creator_id === user.id) {
+              setIsOwner(true);
+            }
+          }
+        }
+      } catch (error) {
+        console.error("Error fetching bounty:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchBounty();
+  }, [bountyId, user]);
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-black"></div>
+      </div>
+    );
+  }
 
   if (!bounty) {
     return (
@@ -183,13 +237,19 @@ export default function BountyDetailPage({
               </div>
             </div>
 
-            {/* CTA Button */}
-            <button
-              onClick={() => setShowModal(true)}
-              className="w-full bg-black text-white font-bold py-4 px-8 hover:bg-gray-800 transition-all duration-200 text-lg"
-            >
-              Submit your content to participate in this bounty
-            </button>
+            {/* CTA Button - Only show if not owner */}
+            {!isOwner ? (
+              <button
+                onClick={() => setShowModal(true)}
+                className="w-full bg-black text-white font-bold py-4 px-8 hover:bg-gray-800 transition-all duration-200 text-lg"
+              >
+                Submit your content to participate in this bounty
+              </button>
+            ) : (
+              <div className="w-full border-2 border-gray-300 bg-gray-50 text-gray-600 font-bold py-4 px-8 text-center text-lg">
+                This is your bounty. Creators will submit their content here.
+              </div>
+            )}
           </div>
         </div>
       </main>

@@ -1,53 +1,139 @@
 "use client";
 
-import { useUser } from "@clerk/nextjs";
 import { useEffect, useState } from "react";
+import { useUser } from "@clerk/nextjs";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+
+interface Bounty {
+  id: number;
+  name: string;
+  description: string;
+  total_bounty: number;
+  rate_per_1k_views: number;
+  claimed_bounty: number;
+  creator_id: string | null;
+  created_at: string;
+}
+
 interface Submission {
   id: number;
-  url: string;
-  bountyId: number;
-  bountyName?: string;
-  bountyDescription?: string;
-  title: string;
-  coverImage: string;
-  author?: string | null;
-  viewCount?: number;
-  platform: 'youtube' | 'tiktok' | 'instagram' | 'other';
-  createdAt: string;
-  status?: string;
-  earnedAmount?: number;
+  bounty_id: number;
+  user_id: string;
+  video_url: string;
+  view_count: number;
+  earned_amount: number;
+  status: 'pending' | 'approved' | 'rejected';
+  validation_explanation: string | null;
+  created_at: string;
+  bounties?: {
+    id: number;
+    name: string;
+    rate_per_1k_views: number;
+  };
 }
 
 export default function ProfilePage() {
-  const { isSignedIn, user, isLoaded } = useUser();
+  const { user, isLoaded } = useUser();
+  const router = useRouter();
+  const [activeTab, setActiveTab] = useState<'bounties' | 'submissions'>('bounties');
+  const [bounties, setBounties] = useState<Bounty[]>([]);
   const [submissions, setSubmissions] = useState<Submission[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [editingBounty, setEditingBounty] = useState<number | null>(null);
+  const [editName, setEditName] = useState("");
+  const [editDescription, setEditDescription] = useState("");
+  const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
-    if (isLoaded && isSignedIn) {
-      fetchSubmissions();
-    } else if (isLoaded && !isSignedIn) {
-      setIsLoading(false);
+    if (isLoaded && !user) {
+      router.push("/");
     }
-  }, [isLoaded, isSignedIn]);
+  }, [isLoaded, user, router]);
 
-  const fetchSubmissions = async () => {
+  useEffect(() => {
+    if (user) {
+      fetchUserData();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user]);
+
+  const fetchUserData = async () => {
     try {
       setIsLoading(true);
-      const response = await fetch('/api/user-submissions');
       
-      if (!response.ok) {
-        throw new Error('Failed to fetch submissions');
+      // Fetch user's created bounties
+      const bountiesResponse = await fetch("/api/bounties");
+      if (bountiesResponse.ok) {
+        const bountiesData = await bountiesResponse.json();
+        const userBounties = bountiesData.filter(
+          (bounty: Bounty) => bounty.creator_id === user?.id
+        );
+        setBounties(userBounties);
       }
-      
-      const data = await response.json();
-      setSubmissions(data.submissions || []);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load submissions');
+
+      // Fetch user's submissions
+      const submissionsResponse = await fetch("/api/submissions");
+      if (submissionsResponse.ok) {
+        const submissionsData = await submissionsResponse.json();
+        setSubmissions(submissionsData);
+      }
+    } catch (error) {
+      console.error("Error fetching user data:", error);
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleEditClick = (bounty: Bounty) => {
+    setEditingBounty(bounty.id);
+    setEditName(bounty.name);
+    setEditDescription(bounty.description);
+  };
+
+  const handleCancelEdit = () => {
+    setEditingBounty(null);
+    setEditName("");
+    setEditDescription("");
+  };
+
+  const handleSaveEdit = async (bountyId: number) => {
+    try {
+      setIsSaving(true);
+      const response = await fetch("/api/bounties", {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          id: bountyId,
+          name: editName,
+          description: editDescription,
+        }),
+      });
+
+      if (response.ok) {
+        const updatedBounty = await response.json();
+        // Update the bounties list with the updated bounty
+        setBounties(
+          bounties.map((b) =>
+            b.id === bountyId
+              ? { ...b, name: updatedBounty.name, description: updatedBounty.description }
+              : b
+          )
+        );
+        setEditingBounty(null);
+        setEditName("");
+        setEditDescription("");
+      } else {
+        const error = await response.json();
+        alert(`Failed to update bounty: ${error.error || "Unknown error"}`);
+      }
+    } catch (error) {
+      console.error("Error updating bounty:", error);
+      alert("Failed to update bounty. Please try again.");
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -62,169 +148,284 @@ export default function ProfilePage() {
     );
   }
 
-  if (!isSignedIn) {
-    return (
-      <div className="min-h-screen bg-[#F5F1E8] flex items-center justify-center">
-        <div className="text-center max-w-md">
-          <h1 className="text-3xl font-bold text-black mb-4">Sign In Required</h1>
-          <p className="text-gray-700 mb-6">
-            You need to be signed in to view your profile and submissions.
-          </p>
-          <Link 
-            href="/"
-            className="inline-block bg-black text-white font-semibold py-3 px-6 hover:bg-gray-800 transition-colors duration-200"
-          >
-            Go Home
-          </Link>
-        </div>
-      </div>
-    );
+
+  if (!user) {
+    return null;
   }
+
+  const getStatusBadgeClass = (status: string) => {
+    switch (status) {
+      case 'approved':
+        return 'bg-green-100 text-green-800 border-green-300';
+      case 'rejected':
+        return 'bg-red-100 text-red-800 border-red-300';
+      default:
+        return 'bg-yellow-100 text-yellow-800 border-yellow-300';
+    }
+  };
 
   return (
     <div className="min-h-screen bg-[#F5F1E8]">
-      {/* Header */}
-      <header className="border-b border-gray-300">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center py-6">
-            <div>
-              <h1 className="text-4xl font-bold text-black font-[family-name:var(--font-dancing-script)]">
-                Django
-              </h1>
-              <p className="mt-2 text-gray-700">My Profile</p>
-            </div>
-            <Link 
-              href="/"
-              className="bg-transparent text-black font-semibold px-6 py-2 border border-black hover:bg-black hover:text-white transition-colors duration-200"
-            >
-              Back to Home
-            </Link>
-          </div>
-        </div>
-      </header>
-
-      {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        {/* User Info */}
-        <div className="bg-white border border-gray-300 p-6 mb-8">
-          <div className="flex items-start justify-between">
-            <div>
-              <h2 className="text-2xl font-bold text-black mb-2">
-                {user?.username || user?.firstName || 'User'}
-              </h2>
-              <p className="text-gray-700">
-                {user?.emailAddresses[0]?.emailAddress}
-              </p>
-              <p className="text-sm text-gray-600 mt-2">
-                Member since {new Date(user?.createdAt || '').toLocaleDateString()}
-              </p>
-            </div>
-            <div className="text-right">
-              <div className="text-3xl font-bold text-black">
-                {submissions.length}
-              </div>
-              <div className="text-sm text-gray-600">
-                Total Submissions
-              </div>
-            </div>
+        <div className="mb-8">
+          <h1 className="text-4xl font-bold text-black mb-2">My Profile</h1>
+          <p className="text-gray-700">
+            Manage your bounties and submissions
+          </p>
+        </div>
+
+        {/* Tabs */}
+        <div className="mb-6 border-b border-gray-300">
+          <div className="flex gap-0">
+            <button
+              onClick={() => setActiveTab('bounties')}
+              className={`px-6 py-3 font-semibold border-b-2 transition-colors ${
+                activeTab === 'bounties'
+                  ? 'border-black text-black'
+                  : 'border-transparent text-gray-500 hover:text-black'
+              }`}
+            >
+              My Bounties ({bounties.length})
+            </button>
+            <button
+              onClick={() => setActiveTab('submissions')}
+              className={`px-6 py-3 font-semibold border-b-2 transition-colors ${
+                activeTab === 'submissions'
+                  ? 'border-black text-black'
+                  : 'border-transparent text-gray-500 hover:text-black'
+              }`}
+            >
+              My Submissions ({submissions.length})
+            </button>
           </div>
         </div>
 
-        {/* Submissions Section */}
-        <div className="mb-6">
-          <h3 className="text-2xl font-bold text-black mb-4">My Submissions</h3>
-        </div>
+        {/* Bounties Tab */}
+        {activeTab === 'bounties' && (
+          <>
+            {bounties.length === 0 ? (
+              <div className="bg-white border border-black p-8 text-center">
+                <p className="text-gray-600 text-lg mb-4">
+                  You haven&apos;t created any bounties yet.
+                </p>
+                <Link
+                  href="/"
+                  className="inline-block bg-black text-white px-6 py-2 font-semibold hover:bg-gray-800 transition-colors"
+                >
+                  Create Your First Bounty
+                </Link>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {bounties.map((bounty) => (
+                  <div
+                    key={bounty.id}
+                    className="bg-white border border-black p-6"
+                  >
+                    {editingBounty === bounty.id ? (
+                      // Edit mode
+                      <div className="space-y-4">
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">
+                            Bounty Name
+                          </label>
+                          <input
+                            type="text"
+                            value={editName}
+                            onChange={(e) => setEditName(e.target.value)}
+                            className="w-full px-4 py-2 border border-black bg-white text-black focus:outline-none focus:border-black"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">
+                            Description
+                          </label>
+                          <textarea
+                            value={editDescription}
+                            onChange={(e) => setEditDescription(e.target.value)}
+                            rows={3}
+                            className="w-full px-4 py-2 border border-black bg-white text-black focus:outline-none focus:border-black resize-none"
+                          />
+                        </div>
+                        <div className="flex gap-2 justify-end">
+                          <button
+                            onClick={handleCancelEdit}
+                            disabled={isSaving}
+                            className="px-4 py-2 border border-black text-black hover:bg-gray-100 transition-colors disabled:opacity-50"
+                          >
+                            Cancel
+                          </button>
+                          <button
+                            onClick={() => handleSaveEdit(bounty.id)}
+                            disabled={isSaving || !editName || !editDescription}
+                            className="px-4 py-2 bg-black text-white hover:bg-gray-800 transition-colors disabled:opacity-50"
+                          >
+                            {isSaving ? "Saving..." : "Save Changes"}
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      // View mode
+                      <div>
+                        <div className="flex justify-between items-start mb-4">
+                          <div className="flex-1">
+                            <h2 className="text-2xl font-bold text-black mb-2">
+                              {bounty.name}
+                            </h2>
+                            <p className="text-gray-700 mb-4">
+                              {bounty.description}
+                            </p>
+                          </div>
+                          <button
+                            onClick={() => handleEditClick(bounty)}
+                            className="ml-4 px-4 py-2 border border-black text-black hover:bg-gray-100 transition-colors whitespace-nowrap"
+                          >
+                            Edit Details
+                          </button>
+                        </div>
+                        
+                        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 pt-4 border-t border-gray-300">
+                          <div>
+                            <p className="text-sm text-gray-600 mb-1">
+                              Total Bounty
+                            </p>
+                            <p className="text-lg font-semibold text-black">
+                              ${bounty.total_bounty.toLocaleString()}
+                            </p>
+                          </div>
+                          <div>
+                            <p className="text-sm text-gray-600 mb-1">
+                              Rate per 1k Views
+                            </p>
+                            <p className="text-lg font-semibold text-black">
+                              ${bounty.rate_per_1k_views.toLocaleString()}
+                            </p>
+                          </div>
+                          <div>
+                            <p className="text-sm text-gray-600 mb-1">
+                              Claimed Bounty
+                            </p>
+                            <p className="text-lg font-semibold text-black">
+                              ${bounty.claimed_bounty.toLocaleString()}
+                            </p>
+                          </div>
+                          <div>
+                            <p className="text-sm text-gray-600 mb-1">
+                              Remaining
+                            </p>
+                            <p className="text-lg font-semibold text-green-600">
+                              ${(bounty.total_bounty - bounty.claimed_bounty).toLocaleString()}
+                            </p>
+                          </div>
+                        </div>
 
-        {error && (
-          <div className="bg-red-50 border border-red-200 p-4 mb-6">
-            <p className="text-red-800">{error}</p>
-          </div>
+                        <div className="mt-4 pt-4 border-t border-gray-300">
+                          <Link
+                            href={`/bounty/${bounty.id}`}
+                            className="text-black hover:underline font-medium"
+                          >
+                            View Bounty Details →
+                          </Link>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+          </>
         )}
 
-        {submissions.length === 0 ? (
-          <div className="bg-white border border-gray-300 p-12 text-center">
-            <p className="text-gray-600 text-lg mb-4">
-              You haven&apos;t made any submissions yet.
-            </p>
-            <Link 
-              href="/"
-              className="inline-block bg-black text-white font-semibold py-3 px-6 hover:bg-gray-800 transition-colors duration-200"
-            >
-              Browse Bounties
-            </Link>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {submissions.map((submission) => (
-              <div 
-                key={submission.id}
-                className="bg-white border border-gray-300 overflow-hidden hover:border-black transition-colors duration-200"
-              >
-                <div className="p-4">
-                  <div className="flex items-center justify-between gap-2 mb-3">
-                    <span className="text-xs font-semibold bg-black text-white px-2 py-1 uppercase">
-                      {submission.platform}
-                    </span>
-                    {submission.status && (
-                      <span className={`text-xs font-semibold px-2 py-1 uppercase ${
-                        submission.status === 'approved' ? 'bg-green-100 text-green-800' :
-                        submission.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
-                        'bg-red-100 text-red-800'
-                      }`}>
+        {/* Submissions Tab */}
+        {activeTab === 'submissions' && (
+          <>
+            {submissions.length === 0 ? (
+              <div className="bg-white border border-black p-8 text-center">
+                <p className="text-gray-600 text-lg mb-4">
+                  You haven&apos;t submitted to any bounties yet.
+                </p>
+                <Link
+                  href="/"
+                  className="inline-block bg-black text-white px-6 py-2 font-semibold hover:bg-gray-800 transition-colors"
+                >
+                  Browse Bounties
+                </Link>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {submissions.map((submission) => (
+                  <div
+                    key={submission.id}
+                    className="bg-white border border-black p-6"
+                  >
+                    <div className="flex justify-between items-start mb-4">
+                      <div className="flex-1">
+                        <h3 className="text-xl font-bold text-black mb-2">
+                          {submission.bounties?.name || 'Bounty'}
+                        </h3>
+                        <a
+                          href={submission.video_url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-blue-600 hover:underline text-sm break-all"
+                        >
+                          {submission.video_url}
+                        </a>
+                      </div>
+                      <span
+                        className={`px-3 py-1 border text-sm font-semibold uppercase ${getStatusBadgeClass(
+                          submission.status
+                        )}`}
+                      >
                         {submission.status}
                       </span>
-                    )}
-                  </div>
-                  
-                  <h4 className="font-bold text-black mb-1">
-                    {submission.bountyName || submission.title}
-                  </h4>
-                  
-                  {submission.bountyDescription && (
-                    <p className="text-sm text-gray-600 mb-3 line-clamp-2">
-                      {submission.bountyDescription}
-                    </p>
-                  )}
+                    </div>
 
-                  <div className="space-y-2 mb-3">
-                    {submission.viewCount !== undefined && (
-                      <div className="flex justify-between text-sm">
-                        <span className="text-gray-600">Views:</span>
-                        <span className="font-semibold text-black">
-                          {submission.viewCount.toLocaleString()}
-                        </span>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-4 border-t border-gray-300">
+                      <div>
+                        <p className="text-sm text-gray-600 mb-1">Views</p>
+                        <p className="text-lg font-semibold text-black">
+                          {submission.view_count.toLocaleString()}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-gray-600 mb-1">Earned</p>
+                        <p className="text-lg font-semibold text-green-600">
+                          ${submission.earned_amount.toLocaleString()}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-gray-600 mb-1">
+                          Submitted
+                        </p>
+                        <p className="text-sm text-black">
+                          {new Date(submission.created_at).toLocaleDateString()}
+                        </p>
+                      </div>
+                    </div>
+
+                    {submission.validation_explanation && (
+                      <div className="mt-4 pt-4 border-t border-gray-300">
+                        <p className="text-sm text-gray-600 mb-1">Note:</p>
+                        <p className="text-black">{submission.validation_explanation}</p>
                       </div>
                     )}
-                    
-                    {submission.earnedAmount !== undefined && (
-                      <div className="flex justify-between text-sm">
-                        <span className="text-gray-600">Earned:</span>
-                        <span className="font-bold text-green-600">
-                          ${submission.earnedAmount.toFixed(2)}
-                        </span>
-                      </div>
-                    )}
-                  </div>
 
-                  <p className="text-xs text-gray-500 mb-3">
-                    Submitted {new Date(submission.createdAt).toLocaleDateString()}
-                  </p>
-                  
-                  <a
-                    href={submission.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-block text-sm text-black hover:underline font-medium"
-                  >
-                    View Content →
-                  </a>
-                </div>
+                    <div className="mt-4 pt-4 border-t border-gray-300">
+                      <Link
+                        href={`/bounty/${submission.bounty_id}`}
+                        className="text-black hover:underline font-medium"
+                      >
+                        View Bounty Details →
+                      </Link>
+                    </div>
+                  </div>
+                ))}
               </div>
-            ))}
-          </div>
+            )}
+          </>
         )}
       </main>
     </div>
   );
 }
-
