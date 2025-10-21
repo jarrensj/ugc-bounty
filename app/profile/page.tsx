@@ -164,6 +164,10 @@ export default function ProfilePage() {
     }
   };
 
+  const calculateEarnings = (viewCount: number, ratePer1kViews: number): number => {
+    return (viewCount / 1000) * ratePer1kViews;
+  };
+
   return (
     <div className="min-h-screen bg-[#F5F1E8]">
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
@@ -381,7 +385,7 @@ export default function ProfilePage() {
                       </span>
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-4 border-t border-gray-300">
+                    <div className="grid grid-cols-1 md:grid-cols-4 gap-4 pt-4 border-t border-gray-300">
                       <div>
                         <p className="text-sm text-gray-600 mb-1">Views</p>
                         <p className="text-lg font-semibold text-black">
@@ -389,17 +393,21 @@ export default function ProfilePage() {
                         </p>
                       </div>
                       <div>
-                        <p className="text-sm text-gray-600 mb-1">Earned</p>
-                        <p className="text-lg font-semibold text-green-600">
-                          ${submission.earned_amount.toLocaleString()}
+                        <p className="text-sm text-gray-600 mb-1">Rate per 1k</p>
+                        <p className="text-lg font-semibold text-black">
+                          ${submission.bounties?.rate_per_1k_views.toFixed(2) || '0.00'}
                         </p>
                       </div>
                       <div>
-                        <p className="text-sm text-gray-600 mb-1">
-                          Submitted
+                        <p className="text-sm text-gray-600 mb-1">Earned</p>
+                        <p className="text-lg font-semibold text-green-600">
+                          ${submission.earned_amount.toFixed(2)}
                         </p>
-                        <p className="text-sm text-black">
-                          {new Date(submission.created_at).toLocaleDateString()}
+                      </div>
+                      <div>
+                        <p className="text-sm text-gray-600 mb-1">Potential</p>
+                        <p className="text-lg font-semibold text-blue-600">
+                          ${calculateEarnings(submission.view_count, submission.bounties?.rate_per_1k_views || 0).toFixed(2)}
                         </p>
                       </div>
                     </div>

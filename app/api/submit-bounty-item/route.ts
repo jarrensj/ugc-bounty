@@ -5,10 +5,14 @@ import type {
   SubmitBountyItemRequest,
   SubmitBountyItemResponse,
   BountyItemData,
-  PeekalinkResponse,
 } from './types';
 
-const PEEKALINK_API_URL = 'https://api.peekalink.io/';
+interface LinkPreviewResponse {
+  title: string;
+  description: string;
+  image: string;
+  url: string;
+}
 
 function detectPlatform(url: string): 'youtube' | 'tiktok' | 'instagram' | 'other' {
   const hostname = new URL(url).hostname.toLowerCase();
@@ -26,18 +30,18 @@ function detectPlatform(url: string): 'youtube' | 'tiktok' | 'instagram' | 'othe
   return 'other';
 }
 
-async function fetchPeekalinkData(url: string, apiKey: string): Promise<PeekalinkResponse> {
-  const response = await fetch(PEEKALINK_API_URL, {
+async function fetchLinkPreviewData(url: string): Promise<LinkPreviewResponse> {
+  const response = await fetch(`${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/link-preview`, {
     method: 'POST',
     headers: {
-      'Authorization': `Bearer ${apiKey}`,
       'Content-Type': 'application/json',
     },
-    body: JSON.stringify({ link: url }),
+    body: JSON.stringify({ url }),
   });
 
   if (!response.ok) {
-    throw new Error(`Peekalink API returned ${response.status}: ${response.statusText}`);
+    const errorData = await response.json();
+    throw new Error(errorData.error || 'Failed to fetch preview data');
   }
 
   return response.json();
@@ -59,14 +63,6 @@ export async function POST(
       );
     }
 
-    const peekalinkApiKey = process.env.PEEKALINK_API_KEY;
-    if (!peekalinkApiKey) {
-      return NextResponse.json(
-        { success: false, error: 'Peekalink API key not configured' },
-        { status: 500 }
-      );
-    }
-
     const body: SubmitBountyItemRequest = await request.json();
 
     if (!body.url || !body.bountyId) {
@@ -78,22 +74,17 @@ export async function POST(
 
     const platform = detectPlatform(body.url);
     
-    const peekalinkData = await fetchPeekalinkData(body.url, peekalinkApiKey);
+    const linkPreviewData = await fetchLinkPreviewData(body.url);
 
-    if (!peekalinkData.ok) {
-      return NextResponse.json(
-        { success: false, error: 'Failed to fetch preview data' },
-        { status: 400 }
-      );
-    }
-
-    let title = peekalinkData.title;
-    let coverImage = peekalinkData.image?.large?.url || peekalinkData.image?.medium?.url || peekalinkData.image?.original?.url;
+    let title = linkPreviewData.title;
+    let coverImage = linkPreviewData.image;
     let author: string | undefined;
     let viewCount: number | undefined;
 
     if (platform === 'youtube') {
       try {
+        console.log(`[Submit Bounty] Fetching YouTube data for URL: ${body.url}`);
+        
         // Use the YouTube views endpoint to get detailed data
         const youtubeResponse = await fetch(`${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/youtube-views`, {
           method: 'POST',
@@ -103,8 +94,12 @@ export async function POST(
           body: JSON.stringify({ urls: [body.url] }),
         });
 
+        console.log(`[Submit Bounty] YouTube API response status: ${youtubeResponse.status}`);
+
         if (youtubeResponse.ok) {
           const youtubeData = await youtubeResponse.json();
+          console.log(`[Submit Bounty] YouTube API response data:`, JSON.stringify(youtubeData, null, 2));
+          
           const result = youtubeData.results[0];
           
           if (result.success && result.metadata) {
@@ -112,10 +107,17 @@ export async function POST(
             author = result.metadata.channelTitle;
             viewCount = result.viewCount;
             coverImage = result.metadata.thumbnail || coverImage;
+            
+            console.log(`[Submit Bounty] YouTube data extracted - Title: ${title}, Author: ${author}, Views: ${viewCount}`);
+          } else {
+            console.error(`[Submit Bounty] YouTube API failed for ${body.url}:`, result.error);
           }
+        } else {
+          const errorText = await youtubeResponse.text();
+          console.error(`[Submit Bounty] YouTube API error response:`, errorText);
         }
       } catch (error) {
-        console.error('Failed to fetch YouTube data:', error);
+        console.error('[Submit Bounty] Failed to fetch YouTube data:', error);
       }
     }
 
@@ -127,9 +129,14 @@ export async function POST(
         user_id: userId,
         video_url: body.url,
         view_count: viewCount || 0,
-        status: 'approved', // Auto-approve for now
+        title: title,
+        description: linkPreviewData.description || '',
+        cover_image_url: coverImage,
+        author: author || null,
+        platform: platform,
+        status: 'approved' as const, // Auto-approve for now
         validation_explanation: null,
-      })
+      } as any)
       .select()
       .single();
 
@@ -148,17 +155,18 @@ export async function POST(
         user_id: userId,
         username: user?.username || null,
         email: user?.emailAddresses[0]?.emailAddress || null,
-      });
+      } as any);
 
     const itemData: BountyItemData = {
       url: body.url,
       bountyId: body.bountyId,
       title,
+      description: linkPreviewData.description || '',
       coverImage,
       author,
       viewCount,
       platform,
-      createdAt: submission.created_at,
+      createdAt: (submission as any).created_at,
       submittedBy: {
         userId,
         username: user?.username || undefined,
