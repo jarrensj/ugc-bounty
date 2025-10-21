@@ -1,26 +1,32 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { supabaseAdmin } from './supabase-server';
+import type { Database } from '../types/database.types';
+
+type Bounty = Database['public']['Tables']['bounties']['Row'];
+type Submission = Database['public']['Tables']['submissions']['Row'];
+type UserProfile = Database['public']['Tables']['user_profiles']['Row'];
 
 /**
  * Get all active bounties with remaining balance
  */
-export async function getActiveBounties() {
-  const { data, error } = await supabaseAdmin
-    .from('bounties')
+export async function getActiveBounties(): Promise<Bounty[]> {
+  const { data, error } = await (supabaseAdmin
+    .from('bounties') as any)
     .select('*')
     .order('created_at', { ascending: false });
 
   if (error) throw error;
   
   // Filter bounties that still have available funds
-  return data?.filter(bounty => bounty.claimed_bounty < bounty.total_bounty) || [];
+  return data?.filter((bounty: Bounty) => bounty.claimed_bounty < bounty.total_bounty) || [];
 }
 
 /**
  * Get a single bounty by ID
  */
-export async function getBountyById(id: number) {
-  const { data, error } = await supabaseAdmin
-    .from('bounties')
+export async function getBountyById(id: number): Promise<Bounty> {
+  const { data, error } = await (supabaseAdmin
+    .from('bounties') as any)
     .select('*')
     .eq('id', id)
     .single();
@@ -32,23 +38,23 @@ export async function getBountyById(id: number) {
 /**
  * Get all submissions for a specific bounty
  */
-export async function getSubmissionsByBounty(bountyId: number) {
-  const { data, error } = await supabaseAdmin
-    .from('submissions')
+export async function getSubmissionsByBounty(bountyId: number): Promise<Submission[]> {
+  const { data, error } = await (supabaseAdmin
+    .from('submissions') as any)
     .select('*')
     .eq('bounty_id', bountyId)
     .order('created_at', { ascending: false });
 
   if (error) throw error;
-  return data;
+  return data || [];
 }
 
 /**
  * Get all submissions for a specific user
  */
-export async function getSubmissionsByUser(userId: string) {
-  const { data, error } = await supabaseAdmin
-    .from('submissions')
+export async function getSubmissionsByUser(userId: string): Promise<Submission[]> {
+  const { data, error } = await (supabaseAdmin
+    .from('submissions') as any)
     .select(`
       *,
       bounties (*)
@@ -57,7 +63,7 @@ export async function getSubmissionsByUser(userId: string) {
     .order('created_at', { ascending: false });
 
   if (error) throw error;
-  return data;
+  return data || [];
 }
 
 /**
@@ -67,9 +73,9 @@ export async function createSubmission(
   userId: string,
   bountyId: number,
   videoUrl: string
-) {
-  const { data, error } = await supabaseAdmin
-    .from('submissions')
+): Promise<Submission> {
+  const { data, error } = await (supabaseAdmin
+    .from('submissions') as any)
     .insert({
       user_id: userId,
       bounty_id: bountyId,
@@ -91,7 +97,7 @@ export async function updateSubmissionStatus(
   status: 'pending' | 'approved' | 'rejected',
   validationExplanation: string,
   viewCount?: number
-) {
+): Promise<Submission> {
   const updateData: {
     status: 'pending' | 'approved' | 'rejected';
     validation_explanation: string;
@@ -107,8 +113,8 @@ export async function updateSubmissionStatus(
     
     // If approved, calculate earned amount
     if (status === 'approved') {
-      const { data: submission } = await supabaseAdmin
-        .from('submissions')
+      const { data: submission } = await (supabaseAdmin
+        .from('submissions') as any)
         .select('bounty_id')
         .eq('id', submissionId)
         .single();
@@ -121,8 +127,8 @@ export async function updateSubmissionStatus(
     }
   }
 
-  const { data, error } = await supabaseAdmin
-    .from('submissions')
+  const { data, error } = await (supabaseAdmin
+    .from('submissions') as any)
     .update(updateData)
     .eq('id', submissionId)
     .select()
@@ -135,9 +141,9 @@ export async function updateSubmissionStatus(
 /**
  * Update bounty claimed amount
  */
-export async function updateBountyClaimed(bountyId: number, amount: number) {
-  const { data: bounty } = await supabaseAdmin
-    .from('bounties')
+export async function updateBountyClaimed(bountyId: number, amount: number): Promise<Bounty> {
+  const { data: bounty } = await (supabaseAdmin
+    .from('bounties') as any)
     .select('claimed_bounty')
     .eq('id', bountyId)
     .single();
@@ -146,8 +152,8 @@ export async function updateBountyClaimed(bountyId: number, amount: number) {
 
   const newClaimedAmount = bounty.claimed_bounty + amount;
 
-  const { data, error } = await supabaseAdmin
-    .from('bounties')
+  const { data, error } = await (supabaseAdmin
+    .from('bounties') as any)
     .update({ claimed_bounty: newClaimedAmount })
     .eq('id', bountyId)
     .select()
@@ -164,10 +170,10 @@ export async function getOrCreateUserProfile(
   userId: string,
   email?: string,
   username?: string
-) {
+): Promise<UserProfile> {
   // Try to get existing profile
-  const { data: existingProfile } = await supabaseAdmin
-    .from('user_profiles')
+  const { data: existingProfile } = await (supabaseAdmin
+    .from('user_profiles') as any)
     .select('*')
     .eq('user_id', userId)
     .single();
@@ -175,8 +181,8 @@ export async function getOrCreateUserProfile(
   if (existingProfile) return existingProfile;
 
   // Create new profile if doesn't exist
-  const { data, error } = await supabaseAdmin
-    .from('user_profiles')
+  const { data, error } = await (supabaseAdmin
+    .from('user_profiles') as any)
     .insert({
       user_id: userId,
       email: email || null,
@@ -193,9 +199,9 @@ export async function getOrCreateUserProfile(
 /**
  * Update user total earnings
  */
-export async function updateUserEarnings(userId: string, amount: number) {
-  const { data: profile } = await supabaseAdmin
-    .from('user_profiles')
+export async function updateUserEarnings(userId: string, amount: number): Promise<UserProfile> {
+  const { data: profile } = await (supabaseAdmin
+    .from('user_profiles') as any)
     .select('total_earnings')
     .eq('user_id', userId)
     .single();
@@ -204,8 +210,8 @@ export async function updateUserEarnings(userId: string, amount: number) {
 
   const newTotalEarnings = profile.total_earnings + amount;
 
-  const { data, error } = await supabaseAdmin
-    .from('user_profiles')
+  const { data, error } = await (supabaseAdmin
+    .from('user_profiles') as any)
     .update({ total_earnings: newTotalEarnings })
     .eq('user_id', userId)
     .select()
@@ -219,26 +225,28 @@ export async function updateUserEarnings(userId: string, amount: number) {
  * Get user's total earnings and submission stats
  */
 export async function getUserStats(userId: string) {
-  const { data: profile } = await supabaseAdmin
-    .from('user_profiles')
+  const { data: profile } = await (supabaseAdmin
+    .from('user_profiles') as any)
     .select('*')
     .eq('user_id', userId)
     .single();
 
-  const { data: submissions } = await supabaseAdmin
-    .from('submissions')
+  const { data: submissions } = await (supabaseAdmin
+    .from('submissions') as any)
     .select('*')
     .eq('user_id', userId);
+
+  const typedSubmissions = submissions as Submission[] | null;
 
   return {
     profile,
     stats: {
-      totalSubmissions: submissions?.length || 0,
-      approvedSubmissions: submissions?.filter(s => s.status === 'approved').length || 0,
-      pendingSubmissions: submissions?.filter(s => s.status === 'pending').length || 0,
-      rejectedSubmissions: submissions?.filter(s => s.status === 'rejected').length || 0,
+      totalSubmissions: typedSubmissions?.length || 0,
+      approvedSubmissions: typedSubmissions?.filter(s => s.status === 'approved').length || 0,
+      pendingSubmissions: typedSubmissions?.filter(s => s.status === 'pending').length || 0,
+      rejectedSubmissions: typedSubmissions?.filter(s => s.status === 'rejected').length || 0,
       totalEarnings: profile?.total_earnings || 0,
-      totalViews: submissions?.reduce((sum, s) => sum + s.view_count, 0) || 0
+      totalViews: typedSubmissions?.reduce((sum, s) => sum + s.view_count, 0) || 0
     }
   };
 }
