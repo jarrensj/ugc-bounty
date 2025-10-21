@@ -13,6 +13,9 @@ export default function Header() {
   const [bountyDescription, setBountyDescription] = useState("");
   const [totalBounty, setTotalBounty] = useState("");
   const [ratePer1k, setRatePer1k] = useState("");
+  const [companyName, setCompanyName] = useState("");
+  const [logoFile, setLogoFile] = useState<File | null>(null);
+  const [logoPreview, setLogoPreview] = useState<string | null>(null);
   const [isCreating, setIsCreating] = useState(false);
 
   const handleCreateClick = () => {
@@ -23,10 +26,38 @@ export default function Header() {
     setShowCreateModal(true);
   };
 
+  const handleLogoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setLogoFile(file);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setLogoPreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
   const handleCreateBounty = async () => {
     if (bountyName && bountyDescription && totalBounty && ratePer1k) {
       try {
         setIsCreating(true);
+
+        let logoUrl = null;
+        if (logoFile) {
+          const formData = new FormData();
+          formData.append('file', logoFile);
+          
+          const uploadResponse = await fetch('/api/upload-logo', {
+            method: 'POST',
+            body: formData,
+          });
+
+          if (uploadResponse.ok) {
+            const uploadResult = await uploadResponse.json();
+            logoUrl = uploadResult.url;
+          }
+        }
 
         const response = await fetch("/api/bounties", {
           method: "POST",
@@ -38,18 +69,21 @@ export default function Header() {
             description: bountyDescription,
             totalBounty: parseFloat(totalBounty),
             ratePer1kViews: parseFloat(ratePer1k),
+            companyName: companyName || null,
+            logoUrl: logoUrl,
           }),
         });
 
         if (response.ok) {
-          // Reset form
           setBountyName("");
           setBountyDescription("");
           setTotalBounty("");
           setRatePer1k("");
+          setCompanyName("");
+          setLogoFile(null);
+          setLogoPreview(null);
           setShowCreateModal(false);
           
-          // Redirect to home page to see the new bounty
           router.push("/");
         } else {
           const error = await response.json();
@@ -132,7 +166,6 @@ export default function Header() {
             </div>
 
             <div className="space-y-4">
-              {/* Bounty Name */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Bounty Name
@@ -146,7 +179,40 @@ export default function Header() {
                 />
               </div>
 
-              {/* Description */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Company Name
+                </label>
+                <input
+                  type="text"
+                  value={companyName}
+                  onChange={(e) => setCompanyName(e.target.value)}
+                  placeholder="e.g., Acme Corp"
+                  className="w-full px-4 py-2 border border-black bg-white text-black placeholder-gray-400 focus:outline-none focus:border-black"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Company Logo
+                </label>
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleLogoChange}
+                  className="w-full px-4 py-2 border border-black bg-white text-black file:mr-4 file:py-2 file:px-4 file:border-0 file:bg-black file:text-white file:font-semibold hover:file:bg-gray-800"
+                />
+                {logoPreview && (
+                  <div className="mt-2">
+                    <img
+                      src={logoPreview}
+                      alt="Logo preview"
+                      className="h-20 w-20 object-contain border border-gray-300"
+                    />
+                  </div>
+                )}
+              </div>
+
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Description
@@ -160,7 +226,6 @@ export default function Header() {
                 />
               </div>
 
-              {/* Total Bounty */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Total Bounty ($)
@@ -175,7 +240,6 @@ export default function Header() {
                 />
               </div>
 
-              {/* Rate per 1k Views */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Rate per 1k Views ($)
@@ -191,7 +255,6 @@ export default function Header() {
                 />
               </div>
 
-              {/* Submit Button */}
               <div className="pt-2">
                 <button
                   onClick={handleCreateBounty}

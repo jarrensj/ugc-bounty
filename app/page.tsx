@@ -16,6 +16,8 @@ interface BountyWithCreator {
   rate_per_1k_views: number;
   claimed_bounty: number;
   creator_id: string | null;
+  logo_url?: string | null;
+  company_name?: string | null;
   calculated_claimed_bounty: number;
   progress_percentage: number;
   total_submission_views: number;
@@ -53,6 +55,8 @@ export default function Home() {
             rate_per_1k_views: number;
             claimed_bounty: number;
             creator_id: string | null;
+            logo_url?: string | null;
+            company_name?: string | null;
             calculated_claimed_bounty: number;
             progress_percentage: number;
             total_submission_views: number;
@@ -64,6 +68,8 @@ export default function Home() {
             totalBounty: bounty.total_bounty,
             ratePer1kViews: bounty.rate_per_1k_views,
             claimedBounty: bounty.calculated_claimed_bounty, // Use calculated bounty instead of static claimed_bounty
+            logoUrl: bounty.logo_url,
+            companyName: bounty.company_name,
             progressPercentage: bounty.progress_percentage,
             totalSubmissionViews: bounty.total_submission_views,
             isCompleted: bounty.is_completed,
